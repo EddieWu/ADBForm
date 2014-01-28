@@ -1,0 +1,23 @@
+# This is git ignore floders or files list
+# 20140128 Edit by WuJian
+
+# android sdk floder
+android-sdk-windows/
+
+# myself
+#.gitignore
+
+# all zip files
+*.zip
+
+# VC untrace project
+\!ADBForm/
+MoreADB/
+
+# VC binary files
+*.aps
+*.ncb
+*.opt
+ADBForm/Debug/
+ADBForm/ADBForm/Debug/
+
