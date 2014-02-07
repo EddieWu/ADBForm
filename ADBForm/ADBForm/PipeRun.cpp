@@ -14,7 +14,6 @@ CPipeRun::CPipeRun(char *ExcuteCommand,bool ReOrNo)
 	hPipeWrite  = NULL;
 	//
 	strOutput   = "";
-
 	//
 	bReadFlag   = false;
 }

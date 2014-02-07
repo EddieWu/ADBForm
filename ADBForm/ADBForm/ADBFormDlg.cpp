@@ -4,8 +4,7 @@
 #include "stdafx.h"
 #include "ADBForm.h"
 #include "ADBFormDlg.h"
-#include "PipeRun.h"
-#include "Test.h"
+//#include "Test.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -13,7 +12,6 @@
 
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
-CPipeRun *RunObj;
 class CAboutDlg : public CDialog
 {
 public:
@@ -99,6 +97,9 @@ BOOL CADBFormDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	memset(PSW,0,MAX_PATH);
+	::GetCurrentDirectory(MAX_PATH,PSW);
+	//AfxMessageBox(PSW);
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -156,7 +157,7 @@ void CADBFormDlg::OnBnClickedOk()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	char *TestCommand  = "E:\\Project\\06.Acer\\DroidConn\\MoreADB\\adb\\adb shell";
-    char *TestCommand2 = "F:\\BenKyoU\\CloudWu\\CCPP\\CCpp\\Debug\\CCpp.exe";
+    char *TestCommand2 = TEST_COMMAND;//"F:\\BenKyoU\\CloudWu\\CCPP\\CCpp\\Debug\\CCpp.exe";
 	RunObj = new CPipeRun(TestCommand2,true);
 	char str[4096] = {0};
 	HANDLE hGetInfoHandle;
@@ -207,6 +208,7 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 	CString MSG_Buffer = "";
 	//SetDlgItemText(IDC_EDIT_MSGSHOW,"TEST...");
 	GetDlgItemText(IDC_EDIT_MSGSHOW,MSG_Buffer);
+	RunUIChange(true);
 	while(E_READ_INFO_ERR != RunObj->UpdateOutStr(str))
 	{
 		MSG_Buffer.AppendFormat("%s",str);
@@ -217,9 +219,17 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 		UpdateWindow();
 	}
 	RunObj->Close();
+	delete RunObj;
+	RunObj = NULL;
+	RunUIChange(false);
 	//RunObj = NULL;
 	return 0;
 }
 
+void CADBFormDlg::RunUIChange(bool RunFlag)
+{
+	//if (RunFlag)  //running
+	((CButton *)GetDlgItem(IDOK))->EnableWindow(!RunFlag);
+}
 
 

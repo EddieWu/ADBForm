@@ -3,7 +3,9 @@
 
 #pragma once
 #include "afxwin.h"
+#include "PipeRun.h"
 
+#define TEST_COMMAND ("F:\\BenKyoU\\CloudWu\\CCPP\\CCpp\\Debug\\CCpp.exe")
 
 // CADBFormDlg ¶Ô»°¿ò
 class CADBFormDlg : public CDialog
@@ -32,7 +34,10 @@ protected:
 public:
 	afx_msg void OnBnClickedOk();
 	static DWORD LogInfoShow(LPVOID lpParam);
-	DWORD LogInfoShowFunc(WPARAM wPamam, LPARAM lParam);
+	DWORD        LogInfoShowFunc(WPARAM wPamam, LPARAM lParam);
 public:
-	CEdit Cot_msginfoshow;
+	CEdit     Cot_msginfoshow;
+	CPipeRun  *RunObj;
+	void      RunUIChange(bool RunFlag);
+	char      PSW[MAX_PATH];
 };
