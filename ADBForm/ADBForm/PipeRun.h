@@ -7,6 +7,7 @@ typedef enum
 	E_CREATE_PIPE_FAIL,
 	E_CREATE_PROC_FAIL,
     E_READ_INFO_CONTINUE,
+	E_READ_INFO_ERR
 
 
 
@@ -24,6 +25,7 @@ private:
 	HANDLE  hPipeRead;
     HANDLE  hPipeWrite;
 	CString strOutput;
+	bool    bReadFlag;
 	PROCESS_INFORMATION pi;
 public:
 	DWORD   PreparePipe(void);

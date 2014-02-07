@@ -14,6 +14,9 @@ CPipeRun::CPipeRun(char *ExcuteCommand,bool ReOrNo)
 	hPipeWrite  = NULL;
 	//
 	strOutput   = "";
+
+	//
+	bReadFlag   = false;
 }
 
 CPipeRun::~CPipeRun(void)
@@ -71,10 +74,12 @@ DWORD   CPipeRun::UpdateOutStr(char oStr[4096])
 	char buffer[4096] = {0};
 	//CString strOutput;
 	DWORD bytesRead;
+	bReadFlag = true;
 
 	if (ReadFile(hPipeRead,buffer,4095,&bytesRead,NULL) == NULL)  //∂¡»°π‹µ¿
 	{
-		return E_SUCCESS;
+		bReadFlag = false;
+		return E_READ_INFO_ERR;
 	}
 	else
 	{

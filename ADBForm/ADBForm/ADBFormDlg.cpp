@@ -13,7 +13,7 @@
 
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
-
+CPipeRun *RunObj;
 class CAboutDlg : public CDialog
 {
 public:
@@ -57,6 +57,7 @@ CADBFormDlg::CADBFormDlg(CWnd* pParent /*=NULL*/)
 void CADBFormDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_EDIT_MSGSHOW, Cot_msginfoshow);
 }
 
 BEGIN_MESSAGE_MAP(CADBFormDlg, CDialog)
@@ -156,16 +157,29 @@ void CADBFormDlg::OnBnClickedOk()
 	// TODO: 在此添加控件通知处理程序代码
 	char *TestCommand  = "E:\\Project\\06.Acer\\DroidConn\\MoreADB\\adb\\adb shell";
     char *TestCommand2 = "F:\\BenKyoU\\CloudWu\\CCPP\\CCpp\\Debug\\CCpp.exe";
-	CPipeRun *RunObj = new CPipeRun(TestCommand2,true);
+	RunObj = new CPipeRun(TestCommand2,true);
 	char str[4096] = {0};
+	HANDLE hGetInfoHandle;
+	DWORD  dGetInfoHandleID;
     RunObj->PreparePipe();
 	RunObj->RunProgress();
+	/*
 	while (RunObj->UpdateOutStr(str)==E_READ_INFO_CONTINUE)
 	{
-		SetDlgItemText(IDC_EDIT1,str);  //显示输出信息到编辑框,并刷新窗口
+		SetDlgItemText(IDC_EDIT1,str);
 		UpdateWindow();
 	}
+	*/
+	/*
+	CString MSG_Buffer = "";
+	GetDlgItemText(IDC_EDIT_MSGSHOW,MSG_Buffer);
+	RunObj->UpdateOutStr(str);
+	MSG_Buffer.AppendFormat("%s",str);
+	SetDlgItemText(IDC_EDIT_MSGSHOW,MSG_Buffer);
+	UpdateWindow();
 	RunObj->Close();
+	*/
+	hGetInfoHandle = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)LogInfoShow,this,NULL,&dGetInfoHandleID);
 	/*
 	DWORD   PreparePipe(void);
 	DWORD   RunProgress(void);
@@ -176,5 +190,36 @@ void CADBFormDlg::OnBnClickedOk()
 	//CString teststr = RunObj->GetRunInfo();
 	//CTest tt;
 	//= new CPipeRun(TestCommand,true);
-	OnOK();
+	//OnOK();
 }
+
+
+DWORD CADBFormDlg::LogInfoShow(LPVOID lpParam)
+{
+	CADBFormDlg *pThis = (CADBFormDlg *)lpParam;
+
+	return pThis->LogInfoShowFunc(0, 0);
+}
+
+DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
+{
+	char str[4096] = {0};
+	CString MSG_Buffer = "";
+	//SetDlgItemText(IDC_EDIT_MSGSHOW,"TEST...");
+	GetDlgItemText(IDC_EDIT_MSGSHOW,MSG_Buffer);
+	while(E_READ_INFO_ERR != RunObj->UpdateOutStr(str))
+	{
+		MSG_Buffer.AppendFormat("%s",str);
+		SetDlgItemText(IDC_EDIT_MSGSHOW,MSG_Buffer);
+		((CEdit *)GetDlgItem(IDC_EDIT_MSGSHOW))->SetSel(MSG_Buffer.GetLength(),MSG_Buffer.GetLength());
+		//Cot_msginfoshow
+		//m_EdtLog.SetSel(sTmp.GetLength(),sTmp.GetLength());
+		UpdateWindow();
+	}
+	RunObj->Close();
+	//RunObj = NULL;
+	return 0;
+}
+
+
+

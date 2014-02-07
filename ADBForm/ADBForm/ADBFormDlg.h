@@ -2,6 +2,7 @@
 //
 
 #pragma once
+#include "afxwin.h"
 
 
 // CADBFormDlg ¶Ô»°¿ò
@@ -30,4 +31,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedOk();
+	static DWORD LogInfoShow(LPVOID lpParam);
+	DWORD LogInfoShowFunc(WPARAM wPamam, LPARAM lParam);
+public:
+	CEdit Cot_msginfoshow;
 };
