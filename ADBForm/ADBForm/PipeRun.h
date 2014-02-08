@@ -30,7 +30,7 @@ private:
 public:
 	DWORD   PreparePipe(void);
 	DWORD   RunProgress(void);
-	DWORD   UpdateOutStr(char oStr[4096]);
+	DWORD   UpdateOutStr(char oStr[]);
 	DWORD   Close(void);
 	CString GetRunInfo(void);
 };

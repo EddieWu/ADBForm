@@ -18,6 +18,8 @@ MoreADB/
 *.aps
 *.ncb
 *.opt
-ADBForm/Debug/
+ADBForm/debug/
+ADBForm/release/
 ADBForm/ADBForm/Debug/
+ADBForm/ADBForm/Release/
 

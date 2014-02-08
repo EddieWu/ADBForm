@@ -65,17 +65,17 @@ DWORD   CPipeRun::RunProgress(void)
 }
 
 
-DWORD   CPipeRun::UpdateOutStr(char oStr[4096])
+DWORD   CPipeRun::UpdateOutStr(char oStr[])
 {
 	//等待进程执行完毕 
 	//WaitForSingleObject(pi.hProcess, INFINITE);
 
-	char buffer[4096] = {0};
+	char buffer[40960] = {0};
 	//CString strOutput;
 	DWORD bytesRead;
 	bReadFlag = true;
 
-	if (ReadFile(hPipeRead,buffer,4095,&bytesRead,NULL) == NULL)  //读取管道
+	if (ReadFile(hPipeRead,buffer,40959,&bytesRead,NULL) == NULL)  //读取管道
 	{
 		bReadFlag = false;
 		return E_READ_INFO_ERR;
