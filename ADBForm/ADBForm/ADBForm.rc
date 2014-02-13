@@ -64,7 +64,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDR_MAINFRAME           ICON                    "res\\ADBForm.ico"
+IDR_MAINFRAME           ICON                    "res\\003.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -73,27 +73,38 @@ IDR_MAINFRAME           ICON                    "res\\ADBForm.ico"
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 235, 55
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "关于 ADBForm"
+CAPTION "about..."
 FONT 9, "宋体", 0, 0, 0x1
 BEGIN
-    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
-    LTEXT           "ADBForm v1.0(alpha)",IDC_STATIC,40,10,119,8,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2014",IDC_STATIC,40,25,119,8
-    DEFPUSHBUTTON   "确定",IDOK,178,7,50,16,WS_GROUP
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,21,21
+    LTEXT           "ADBForm v0.9(142A)",IDC_STATIC,40,8,119,8,SS_NOPREFIX
+    LTEXT           "Shanghai Huaqin Telecom Copyright (C) 2014",IDC_STATIC,40,24,169,8
+    DEFPUSHBUTTON   "OK",IDOK,193,39,38,12,WS_GROUP
+    LTEXT           "Email:wujian@huaqin.com",IDC_STATIC,40,39,119,8,SS_NOPREFIX
 END
 
 IDD_ADBFORM_DIALOG DIALOGEX 0, 0, 342, 144
 STYLE DS_SETFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "ADBForm v1.0(alpha)"
+CAPTION "ADBForm v0.9(142A)"
 FONT 9, "微软雅黑", 400, 0, 0x86
 BEGIN
-    DEFPUSHBUTTON   "TEST",IDOK,307,72,28,11
-    EDITTEXT        IDC_EDIT_MSGSHOW,5,86,332,53,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | NOT WS_BORDER | WS_VSCROLL
-    PUSHBUTTON      "DeDUT",IDC_BUTTON1,183,72,28,11
-    PUSHBUTTON      "IPerfT",IDC_BUTTON2,245,72,28,11
-    PUSHBUTTON      "WiFiSys",IDC_BUTTON3,214,72,28,11
-    PUSHBUTTON      "IPerfR",IDC_BUTTON4,276,72,28,11
+    DEFPUSHBUTTON   "TEST",IDOK,303,53,28,11
+    EDITTEXT        IDC_EDIT_MSGSHOW,5,68,332,71,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | NOT WS_BORDER | WS_VSCROLL
+    PUSHBUTTON      "DeDUT",IDC_BUTTON1,183,53,28,11
+    PUSHBUTTON      "IPerfT",IDC_BUTTON2,243,41,28,11
+    PUSHBUTTON      "WiFiSys",IDC_BUTTON3,213,53,28,11
+    PUSHBUTTON      "IPerfR",IDC_BUTTON4,273,41,28,11
+    PUSHBUTTON      "DutT",IDC_BUTTON5,243,53,28,11
+    PUSHBUTTON      "DutR",IDC_BUTTON6,273,53,28,11
+    EDITTEXT        IDC_EDIT_PCIP,39,4,90,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_DUTIP,39,21,90,12,ES_AUTOHSCROLL
+    LTEXT           "PCIP:",IDC_STATIC,12,6,18,8
+    LTEXT           "DUTIP:",IDC_STATIC,12,23,23,8
+    COMBOBOX        IDC_COMBO_PRJ,39,37,72,94,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "PRJ:",IDC_STATIC,12,39,23,8
+    COMBOBOX        IDC_COMBO_WO,150,37,72,94,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "WO:",IDC_STATIC,123,39,23,8
 END
 
 
@@ -119,13 +130,13 @@ BEGIN
     BEGIN
         BLOCK "080403a8"
         BEGIN
-            VALUE "CompanyName", "TODO: <公司名>"
-            VALUE "FileDescription", "TODO: <文件说明>"
+            VALUE "CompanyName", "Shanghai Huaqin Telecom"
+            VALUE "FileDescription", "More ADB"
             VALUE "FileVersion", "1.0.0.1"
             VALUE "InternalName", "ADBForm.exe"
-            VALUE "LegalCopyright", "TODO: (C) <公司名>。保留所有权利。"
+            VALUE "LegalCopyright", "Shanghai Huaqin Telecom Copyright (C) 2014"
             VALUE "OriginalFilename", "ADBForm.exe"
-            VALUE "ProductName", "TODO: <产品名>"
+            VALUE "ProductName", "ADBForm"
             VALUE "ProductVersion", "1.0.0.1"
         END
     END
@@ -146,10 +157,10 @@ GUIDELINES DESIGNINFO
 BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 228
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 48
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 231
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 51
     END
 
     IDD_ADBFORM_DIALOG, DIALOG

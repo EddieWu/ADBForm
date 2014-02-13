@@ -48,6 +48,8 @@ END_MESSAGE_MAP()
 
 CADBFormDlg::CADBFormDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CADBFormDlg::IDD, pParent)
+	, cPCIPaddr(_T(""))
+	, cDUTIPaddr(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -56,6 +58,8 @@ void CADBFormDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_EDIT_MSGSHOW, Cot_msginfoshow);
+	DDX_Text(pDX, IDC_EDIT_PCIP, cPCIPaddr);
+	DDX_Text(pDX, IDC_EDIT_DUTIP, cDUTIPaddr);
 }
 
 BEGIN_MESSAGE_MAP(CADBFormDlg, CDialog)
@@ -68,6 +72,9 @@ BEGIN_MESSAGE_MAP(CADBFormDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON3, &CADBFormDlg::OnBnClickedButton3)
 	ON_BN_CLICKED(IDC_BUTTON2, &CADBFormDlg::OnBnClickedButton2)
 	ON_BN_CLICKED(IDC_BUTTON4, &CADBFormDlg::OnBnClickedButton4)
+	ON_BN_CLICKED(IDC_BUTTON5, &CADBFormDlg::OnBnClickedButton5)
+	ON_BN_CLICKED(IDC_BUTTON6, &CADBFormDlg::OnBnClickedButton6)
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 
@@ -106,6 +113,8 @@ BOOL CADBFormDlg::OnInitDialog()
 	//AfxMessageBox(PWD);
 
 	UnDoStrBuff = "";
+
+	LoadDefaultConfig();
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -212,6 +221,7 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 	//CString MSG_Buffer = "";
 	//SetDlgItemText(IDC_EDIT_MSGSHOW,"TEST...");
 	//GetDlgItemText(IDC_EDIT_MSGSHOW,MSG_Buffer);
+	hLogThread = CreateEvent(NULL, FALSE, FALSE, NULL);
 	UnDoStrBuff = "";
 	RunUIChange(true);
 	while(E_READ_INFO_ERR != RunObj->UpdateOutStr(str))
@@ -224,7 +234,15 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 		//UpdateWindow();
 		UpdateLogInfo(-1,str);
 		UnDoStrBuff.AppendFormat("%s",str);
+		if(WAIT_OBJECT_0==WaitForSingleObject(hLogThread,10))
+		{
+			break;
+		}
 	}
+    if (TestFlag==THREAD_IPERF_RX)
+    {
+		SetEvent(hNoLogThread);
+    }
 	//AfxMessageBox(UnDoStrBuff);
 	AnalyseStr(0,TestFlag);
 	RunObj->Close();
@@ -246,6 +264,18 @@ void CADBFormDlg::RunUIChange(bool RunFlag)
 	((CButton *)GetDlgItem(IDC_BUTTON2))->EnableWindow(!RunFlag);
 	((CButton *)GetDlgItem(IDC_BUTTON3))->EnableWindow(!RunFlag);
 	((CButton *)GetDlgItem(IDC_BUTTON4))->EnableWindow(!RunFlag);
+	if (TestFlag!=THREAD_IPERF_TX)
+	{
+		((CButton *)GetDlgItem(IDC_BUTTON5))->EnableWindow(!RunFlag);
+	}
+	if (TestFlag!=THREAD_IPERF_RX)
+	{
+		((CButton *)GetDlgItem(IDC_BUTTON6))->EnableWindow(!RunFlag);
+	}
+	((CButton *)GetDlgItem(IDC_COMBO_PRJ))->EnableWindow(!RunFlag);
+	((CButton *)GetDlgItem(IDC_COMBO_WO))->EnableWindow(!RunFlag);
+	((CEdit *)GetDlgItem(IDC_EDIT_PCIP))->EnableWindow(!RunFlag);
+	((CEdit *)GetDlgItem(IDC_EDIT_DUTIP))->EnableWindow(!RunFlag);
 }
 
 DWORD CADBFormDlg::DetectDevices(void)
@@ -385,6 +415,7 @@ DWORD CADBFormDlg::AnalyseRSSI(void)
 		return E_ADB_ERROR;
 	}
 
+	//find ip address
 	iPos = TestBuff.Find(KEY_RSSI_RESULT);
 	if (-1==iPos)
 	{
@@ -445,7 +476,7 @@ void CADBFormDlg::OnBnClickedButton2()
 DWORD CADBFormDlg::IperfTx(void)
 {
 	TestFlag = THREAD_IPERF_TX;
-	char IperfTxCMD[100] = {0};
+	char IperfTxCMD[MAX_PATH] = {0};
 	sprintf_s(IperfTxCMD,"%s%s",PWD,CMD_PC_IPERF_TX);
 	UpdateLogInfo(-1,"IPERF TX:\r\n");
 	UpdateLogInfo(-1,IperfTxCMD);
@@ -465,13 +496,16 @@ DWORD CADBFormDlg::IperfTx(void)
 void CADBFormDlg::OnBnClickedButton4()
 {
 	// TODO: 在此添加控件通知处理程序代码
+	UpdateData(TRUE);
 	IperfRx();
 }
 DWORD CADBFormDlg::IperfRx(void)
 {
 	TestFlag = THREAD_IPERF_RX;
-	char IperfRxCMD[100] = {0};
-	sprintf_s(IperfRxCMD,"%s%s",PWD,CMD_PC_IPERF_RX);
+	char IperfRxCMD[MAX_PATH] = {0};
+	CString IPReplace = CMD_PC_IPERF_RX;
+	IPReplace.Replace("DUTIP",cDUTIPaddr);
+	sprintf_s(IperfRxCMD,"%s%s",PWD,IPReplace/*CMD_PC_IPERF_RX*/);
 	UpdateLogInfo(-1,"IPERF RX:\r\n");
 	UpdateLogInfo(-1,IperfRxCMD);
 	UpdateLogInfo(-1,"\r\n");
@@ -487,3 +521,169 @@ DWORD CADBFormDlg::IperfRx(void)
 	return 0;
 }
 
+
+void CADBFormDlg::OnBnClickedButton5()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	UpdateData(TRUE);
+	IperfDutTx();
+}
+
+void CADBFormDlg::OnBnClickedButton6()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	IperfDutRx();
+}
+
+//Device action 
+DWORD CADBFormDlg::NoLogInfoDo(LPVOID lpParam)
+{
+	CADBFormDlg *pThis = (CADBFormDlg *)lpParam;
+
+	return pThis->NoLogInfoDoFunc(0, 0);
+}
+
+DWORD CADBFormDlg::NoLogInfoDoFunc(WPARAM wPamam, LPARAM lParam)
+{
+	char str[40960] = {0};
+	//UnDoStrBuff = "";
+	//RunUIChange(true);
+	hNoLogThread = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (TestFlag==THREAD_IPERF_DUT_TX)
+	{
+		((CButton *)GetDlgItem(IDC_BUTTON5))->EnableWindow(false);
+	}
+	if (TestFlag==THREAD_IPERF_DUT_RX)
+	{
+		((CButton *)GetDlgItem(IDC_BUTTON6))->EnableWindow(false);
+	}
+	//
+	while(E_READ_INFO_ERR != DevRunObj->UpdateOutStr(str))
+	{
+		UpdateLogInfo(-1,str);
+		//UnDoStrBuff.AppendFormat("%s",str);
+		if(WAIT_OBJECT_0==WaitForSingleObject(hNoLogThread,10))
+		{
+			break;
+		}
+	}
+	//AnalyseStr(0,TestFlag);
+	//AfxMessageBox("!!!");
+	DevRunObj->Close();
+	delete DevRunObj;
+	DevRunObj = NULL;
+	//RunUIChange(false);
+	CloseHandle(hNoInfoHandle);
+	if (TestFlag==THREAD_IPERF_DUT_TX)
+	{
+		((CButton *)GetDlgItem(IDC_BUTTON5))->EnableWindow(true);
+		UpdateLogInfo(-1,"IPERF TX(DUT):DONE!");
+		UpdateLogInfo(-1,"\r\n");
+		SetEvent(hLogThread);  //tx test give a signal to PC
+		/*
+		if (RunObj!=NULL && hGetInfoHandle!=NULL)
+		{
+			CloseHandle(hGetInfoHandle);
+			delete RunObj;
+			RunObj = NULL;
+			RunUIChange(false);
+		}
+		*/
+	}
+	if (TestFlag==THREAD_IPERF_RX/*THREAD_IPERF_DUT_RX*/)
+	{
+		((CButton *)GetDlgItem(IDC_BUTTON6))->EnableWindow(true);
+		UpdateLogInfo(-1,"IPERF RX(DUT):DONE!");
+		UpdateLogInfo(-1,"\r\n");
+	}
+	return 0;
+}
+
+DWORD CADBFormDlg::IperfDutTx(void)
+{
+	TestFlag = THREAD_IPERF_DUT_TX;
+	char IperfTxDUTCMD[MAX_PATH] = {0};
+	CString IPReplace = CMD_ADB_SHELL_TX;
+	IPReplace.Replace("PCIP",cPCIPaddr);
+	sprintf_s(IperfTxDUTCMD,"%s%s",PWD,IPReplace/*CMD_ADB_SHELL_TX*/);
+	UpdateLogInfo(-1,"IPERF TX(DUT):\r\n");
+	UpdateLogInfo(-1,IperfTxDUTCMD);
+	UpdateLogInfo(-1,"\r\n");
+	//debug
+	//AfxMessageBox(IperfTxDUTCMD);
+	//
+	DevRunObj = new CPipeRun(IperfTxDUTCMD,true);
+	DevRunObj->PreparePipe();
+	DevRunObj->RunProgress();
+
+	hNoInfoHandle = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)NoLogInfoDo,this,NULL,&dNoInfoHandleID);
+
+	return 0;
+}
+DWORD CADBFormDlg::IperfDutRx(void)
+{
+	TestFlag = THREAD_IPERF_DUT_RX;
+	char IperfRxDUTCMD[MAX_PATH] = {0};
+	sprintf_s(IperfRxDUTCMD,"%s%s",PWD,CMD_ADB_SHELL_RX);
+	UpdateLogInfo(-1,"IPERF RX(DUT):\r\n");
+	UpdateLogInfo(-1,IperfRxDUTCMD);
+	UpdateLogInfo(-1,"\r\n");
+	//debug
+	//AfxMessageBox(IperfRxDUTCMD);
+	//
+	DevRunObj = new CPipeRun(IperfRxDUTCMD,true);
+	DevRunObj->PreparePipe();
+	DevRunObj->RunProgress();
+
+	hNoInfoHandle = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)NoLogInfoDo,this,NULL,&dNoInfoHandleID);
+
+	return 0;
+}
+
+BOOL CADBFormDlg::LoadDefaultConfig(void)
+{
+	CString m_sConfigPath = "";
+	m_sConfigPath.Format("%s\\config.ini",PWD);
+	if(TRUE==m_hConfig.SetPath(m_sConfigPath))
+	{
+		//iSIMCheck4 =  m_hConfig.GetKeyIntValue("Settings","SIMCheck4",0);
+		//sMCCMNC1 = m_hConfig.GetKeyStrValue("Settings","MCCMNC1","");
+		cPCIPaddr  = m_hConfig.GetKeyStrValue("Settings","PCIP","");
+		cDUTIPaddr = m_hConfig.GetKeyStrValue("Settings","DeviceIP","");
+		cPrj       = m_hConfig.GetKeyStrValue("Settings","Project","");
+		cWoid      = m_hConfig.GetKeyStrValue("Settings","WorkOrder","");
+	}
+	else
+	{
+		cPCIPaddr  = "";
+		cDUTIPaddr = "";
+		cPrj       = "";
+		cWoid      = "";
+	}
+
+	UpdateData(FALSE);
+
+	return TRUE;
+}
+BOOL CADBFormDlg::SaveConfig(void)
+{
+	//m_hConfig.SetKeyStrValue("Settings","Software",sSWV);
+	//m_hConfig.SetKeyNumValue("Settings","SIMCheck1",iSIMCheck1);
+	UpdateData(TRUE);
+
+	m_hConfig.SetKeyStrValue("Settings","PCIP",cPCIPaddr);
+	m_hConfig.SetKeyStrValue("Settings","DeviceIP",cDUTIPaddr);
+	m_hConfig.SetKeyStrValue("Settings","Project",cPrj);
+	m_hConfig.SetKeyStrValue("Settings","WorkOrder",cWoid);
+
+	return TRUE;
+}
+
+
+
+void CADBFormDlg::OnClose()
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	SaveConfig();
+	CDialog::OnClose();
+}

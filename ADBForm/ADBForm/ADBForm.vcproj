@@ -198,6 +198,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IniFile.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\PipeRun.cpp"
 				>
 			</File>
@@ -237,6 +241,10 @@
 			</File>
 			<File
 				RelativePath=".\ADBFormDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IniFile.h"
 				>
 			</File>
 			<File

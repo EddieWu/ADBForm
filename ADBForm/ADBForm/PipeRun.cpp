@@ -83,7 +83,7 @@ DWORD   CPipeRun::UpdateOutStr(char oStr[])
 	else
 	{
 		strOutput += buffer;
-		strncpy(oStr,buffer,strlen(buffer));
+		strncpy_s(oStr,40960,buffer,strlen(buffer));
 		Sleep(1);
 		return E_READ_INFO_CONTINUE;
 	}
