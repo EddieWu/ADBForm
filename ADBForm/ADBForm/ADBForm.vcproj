@@ -198,6 +198,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\BCMenu.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\BtnST.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ColorStatic.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\IniFile.cpp"
 				>
 			</File>
@@ -244,6 +256,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\BCMenu.h"
+				>
+			</File>
+			<File
+				RelativePath=".\BtnST.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ColorStatic.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IniFile.h"
 				>
 			</File>
@@ -270,6 +294,14 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
+				RelativePath=".\res\003.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\res\004.ico"
+				>
+			</File>
+			<File
 				RelativePath=".\res\ADBForm.ico"
 				>
 			</File>
@@ -279,6 +311,10 @@
 			</File>
 			<File
 				RelativePath=".\res\ADBForm.rc2"
+				>
+			</File>
+			<File
+				RelativePath=".\res\icon1.ico"
 				>
 			</File>
 		</Filter>

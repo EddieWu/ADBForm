@@ -50,6 +50,9 @@ CADBFormDlg::CADBFormDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CADBFormDlg::IDD, pParent)
 	, cPCIPaddr(_T(""))
 	, cDUTIPaddr(_T(""))
+	, m_ckRSSI(FALSE)
+	, m_ckThpTx(FALSE)
+	, m_ckThpRx(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -60,6 +63,15 @@ void CADBFormDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_MSGSHOW, Cot_msginfoshow);
 	DDX_Text(pDX, IDC_EDIT_PCIP, cPCIPaddr);
 	DDX_Text(pDX, IDC_EDIT_DUTIP, cDUTIPaddr);
+	DDX_Control(pDX, IDC_STATIC_INFO, m_stTestStatus);
+	DDX_Control(pDX, IDC_PROGRESS_ALL, ProcessAll);
+	DDX_Control(pDX, IDC_BUTTON_START, m_StatAll);
+	DDX_Control(pDX, IDC_CHECK_RSSI, cbRSSI);
+	DDX_Check(pDX, IDC_CHECK_RSSI, m_ckRSSI);
+	DDX_Control(pDX, IDC_CHECK_THPTX, cbThpTx);
+	DDX_Check(pDX, IDC_CHECK_THPTX, m_ckThpTx);
+	DDX_Control(pDX, IDC_CHECK_THPRX, cbThpRx);
+	DDX_Check(pDX, IDC_CHECK_THPRX, m_ckThpRx);
 }
 
 BEGIN_MESSAGE_MAP(CADBFormDlg, CDialog)
@@ -75,6 +87,7 @@ BEGIN_MESSAGE_MAP(CADBFormDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON5, &CADBFormDlg::OnBnClickedButton5)
 	ON_BN_CLICKED(IDC_BUTTON6, &CADBFormDlg::OnBnClickedButton6)
 	ON_WM_CLOSE()
+	ON_BN_CLICKED(IDC_BUTTON_START, &CADBFormDlg::OnBnClickedButtonStart)
 END_MESSAGE_MAP()
 
 
@@ -111,14 +124,101 @@ BOOL CADBFormDlg::OnInitDialog()
 	memset(PWD,0,MAX_PATH);
 	::GetCurrentDirectory(MAX_PATH,PWD);
 	//AfxMessageBox(PWD);
+	m_StatAll.SetFocus();
 
 	UnDoStrBuff = "";
-
+    hPCIperfServer = NULL;
 	LoadDefaultConfig();
 
-	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
+	//debug
+	/*
+	CFont    m_font;
+	m_font.CreateFont(
+		200,                        // nHeight
+		50,                         // nWidth
+		0,                         // nEscapement
+		0,                         // nOrientation
+		FW_NORMAL,                 // nWeight
+		FALSE,                     // bItalic
+		FALSE,                     // bUnderline
+		0,                         // cStrikeOut
+		ANSI_CHARSET,              // nCharSet
+		OUT_DEFAULT_PRECIS,        // nOutPrecision
+		CLIP_DEFAULT_PRECIS,       // nClipPrecision
+		DEFAULT_QUALITY,           // nQuality
+		DEFAULT_PITCH | FF_SWISS,  // nPitchAndFamily
+		"Arial"              // lpszFacename
+	);
+	m_StatAll.SetFont(&m_font,FALSE);
+	*/
+	m_StatAll.SetFlat(FALSE);
+	m_StatAll.OffsetColor(CButtonST::BTNST_COLOR_BK_IN, 32);
+	m_StatAll.SetAlign(CButtonST::ST_ALIGN_VERT);
+	m_StatAll.SetIcon(IDI_ICON_START);
+	m_StatAll.SetColor(CButtonST::BTNST_COLOR_BK_OUT, RGB(208,208,208)); 
+	m_StatAll.SetColor(CButtonST::BTNST_COLOR_BK_FOCUS, RGB(208,208,208));
+	BOOL ConfigReady = ConfigIsReady();
+	//m_StatAll.EnableWindow(ConfigReady);
+	//m_StatAll.SetColor(CButtonST::BTNST_COLOR_FG_OUT,32);
+	m_StatAll.SetTooltipText(_T("Start testing [开始测试] ..."));
+	UpdateTestStatus(ConfigReady?STATUS_READY:STATUS_UNKOWN);
+	//
+
+	return FALSE;
+	//return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
+void CADBFormDlg::UpdateTestStatus(E_TEST_STATUS status,DWORD errcode)
+{
+	CRect rect;
+	m_stTestStatus.GetWindowRect(&rect);
+	int  SignalFontWidth = 0;
+	char StatusText[12] = {0};
+	switch(status)
+	{
+	case STATUS_READY:
+		SignalFontWidth = rect.Width() / 8;
+		sprintf_s(StatusText,12,"%s","READY");
+		m_stTestStatus.SetBkColor(COLOR_READY);
+		//Sleep(2000);
+		break;
+	case STATUS_RUNNING:
+		SignalFontWidth = rect.Width() / 10-1;
+		sprintf_s(StatusText,12,"%s","RUNNING");
+		m_stTestStatus.SetBkColor(COLOR_RUN);
+		//Sleep(2000);
+		break;
+	case STATUS_PASS:
+		SignalFontWidth = rect.Width() / 6;
+		sprintf_s(StatusText,12,"%s","PASS");
+		m_stTestStatus.SetBkColor(COLOR_PASS);
+		//Sleep(2000);
+	    break;
+	case STATUS_FAIL:
+		SignalFontWidth = rect.Width() / 8;
+		sprintf_s(StatusText,12,"%s[%d]","FAIL",errcode);
+		m_stTestStatus.SetBkColor(COLOR_FAIL);
+	    break;
+	default:
+		SignalFontWidth = rect.Width() / 10-1;
+		sprintf_s(StatusText,12,"%s","CONFIG...");
+		m_stTestStatus.SetBkColor(COLOR_UNCONFIG);
+		//Sleep(2000);
+	    break;
+	}
+	m_stTestStatus.SetStaticFont(_T("Arial"), SignalFontWidth, rect.Height());
+	m_stTestStatus.SetTextColor(COLOR_WHITE);
+	m_stTestStatus.SetWindowText(StatusText);
+
+}
+BOOL CADBFormDlg::ConfigIsReady(void)
+{
+	if (cPCIPaddr.IsEmpty()||cDUTIPaddr.IsEmpty()||cPrj.IsEmpty()||cWoid.IsEmpty())
+	{
+		return FALSE;
+	}
+	return TRUE;
+}
 void CADBFormDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
 	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
@@ -221,7 +321,10 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 	//CString MSG_Buffer = "";
 	//SetDlgItemText(IDC_EDIT_MSGSHOW,"TEST...");
 	//GetDlgItemText(IDC_EDIT_MSGSHOW,MSG_Buffer);
-	hLogThread = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if(TestFlag==THREAD_IPERF_TX)
+	{
+		hPCIperfServer = CreateEvent(NULL, FALSE, FALSE, NULL);
+	}
 	UnDoStrBuff = "";
 	RunUIChange(true);
 	while(E_READ_INFO_ERR != RunObj->UpdateOutStr(str))
@@ -234,15 +337,22 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 		//UpdateWindow();
 		UpdateLogInfo(-1,str);
 		UnDoStrBuff.AppendFormat("%s",str);
-		if(WAIT_OBJECT_0==WaitForSingleObject(hLogThread,10))
+		/*
+		if(TestFlag==THREAD_IPERF_TX)
 		{
-			break;
+			if(WAIT_OBJECT_0==WaitForSingleObject(hPCIperfServer,10))
+			{
+				break;
+			}
 		}
+		*/
 	}
+	/*
     if (TestFlag==THREAD_IPERF_RX)
     {
 		SetEvent(hNoLogThread);
     }
+	*/
 	//AfxMessageBox(UnDoStrBuff);
 	AnalyseStr(0,TestFlag);
 	RunObj->Close();
@@ -473,6 +583,10 @@ void CADBFormDlg::OnBnClickedButton2()
 	IperfTx();
 }
 
+/************************************************************************
+PC端启动IPERF server，没有超时，测试完成后需要手动关闭（destroyprocess）
+
+************************************************************************/
 DWORD CADBFormDlg::IperfTx(void)
 {
 	TestFlag = THREAD_IPERF_TX;
@@ -576,10 +690,21 @@ DWORD CADBFormDlg::NoLogInfoDoFunc(WPARAM wPamam, LPARAM lParam)
 	CloseHandle(hNoInfoHandle);
 	if (TestFlag==THREAD_IPERF_DUT_TX)
 	{
+		SetEvent(hPCIperfServer);
 		((CButton *)GetDlgItem(IDC_BUTTON5))->EnableWindow(true);
 		UpdateLogInfo(-1,"IPERF TX(DUT):DONE!");
 		UpdateLogInfo(-1,"\r\n");
-		SetEvent(hLogThread);  //tx test give a signal to PC
+		if(WAIT_OBJECT_0==WaitForSingleObject(hPCIperfServer,10))
+		{
+			if (RunObj!=NULL)
+			{
+				RunObj->DestroyProcess();
+				//RunObj->Close();
+				//delete RunObj;
+				//RunObj = NULL;
+			}
+		}
+		//SetEvent(hLogThread);  //tx test give a signal to PC
 		/*
 		if (RunObj!=NULL && hGetInfoHandle!=NULL)
 		{
@@ -652,6 +777,9 @@ BOOL CADBFormDlg::LoadDefaultConfig(void)
 		cDUTIPaddr = m_hConfig.GetKeyStrValue("Settings","DeviceIP","");
 		cPrj       = m_hConfig.GetKeyStrValue("Settings","Project","");
 		cWoid      = m_hConfig.GetKeyStrValue("Settings","WorkOrder","");
+		m_ckRSSI   = m_hConfig.GetKeyIntValue("TestItem","Enable RSSI Test",0);
+		m_ckThpTx  = m_hConfig.GetKeyIntValue("TestItem","Enable Throughput Tx Test",0);
+		m_ckThpRx  = m_hConfig.GetKeyIntValue("TestItem","Enable Throughput Rx Test",0);
 	}
 	else
 	{
@@ -675,15 +803,51 @@ BOOL CADBFormDlg::SaveConfig(void)
 	m_hConfig.SetKeyStrValue("Settings","DeviceIP",cDUTIPaddr);
 	m_hConfig.SetKeyStrValue("Settings","Project",cPrj);
 	m_hConfig.SetKeyStrValue("Settings","WorkOrder",cWoid);
+	m_hConfig.SetKeyNumValue("TestItem","Enable RSSI Test",m_ckRSSI);
+	m_hConfig.SetKeyNumValue("TestItem","Enable Throughput Tx Test",m_ckThpTx);
+	m_hConfig.SetKeyNumValue("TestItem","Enable Throughput Rx Test",m_ckThpRx);
 
 	return TRUE;
 }
 
-
+void CADBFormDlg::SetProgressPos(int CurrPos,int MaxPos)
+{
+	if (MAX_PROGRESS_LEN != MaxPos)
+	{
+		ProcessAll.SetRange(1,MaxPos);
+	}
+	ProcessAll.SetPos(CurrPos);
+};
 
 void CADBFormDlg::OnClose()
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	SaveConfig();
 	CDialog::OnClose();
+}
+
+void CADBFormDlg::OnBnClickedButtonStart()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	AfxMessageBox("Click More!");
+
+	UpdateData(TRUE);
+	// Connect device
+
+
+	// RSSI test
+	if (m_ckRSSI)
+	{
+
+	}
+	// Throughput Tx(Upload) test
+	if (m_ckThpTx)
+	{
+
+	}
+	// Throughput Rx(Download) test
+	if (m_ckThpRx)
+	{
+
+	}
 }

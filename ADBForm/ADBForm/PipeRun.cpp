@@ -117,3 +117,21 @@ CString CPipeRun::GetRunInfo(void)
 {
 	return 	strOutput;
 }
+DWORD CPipeRun::DestroyProcess(void)
+{
+	//KillProcess
+	/*
+	HANDLE hProcess = OpenProcess(PROCESS_TERMINATE,FALSE,pi.dwProcessId);
+	if(hProcess==NULL)
+	{
+		return E_DESTROY_PRO_FAIL;
+	}
+	*/
+	if(!TerminateProcess(pi.hProcess,0))
+	{
+		return E_DESTROY_PRO_FAIL;
+	};
+
+	return E_SUCCESS;
+}
+

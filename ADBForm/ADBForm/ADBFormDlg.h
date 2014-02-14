@@ -5,6 +5,9 @@
 #include "afxwin.h"
 #include "PipeRun.h"
 #include "IniFile.h"
+#include "ColorStatic.h"
+#include "BtnST.h"
+#include "afxcmn.h"
 
 #define TEST_COMMAND       ("F:\\BenKyoU\\CloudWu\\CCPP\\CCpp\\Debug\\CCpp.exe")
 #define CMD_ADB_DEVICES    ("\\adb\\adb devices")
@@ -26,6 +29,16 @@
 #define KEY_IPADDR            "ipaddr"
 #define KEY_GATEWAY           "gateway"
 
+//color
+#define COLOR_READY     RGB(27, 136, 228)
+#define COLOR_WHITE     RGB(255, 255, 255)
+#define COLOR_RUN       RGB(240, 160, 16)
+#define COLOR_PASS      RGB(16, 124, 32)
+#define COLOR_FAIL      RGB(223, 32, 16)
+#define COLOR_UNCONFIG  RGB(160, 160, 160)
+
+//
+#define MAX_PROGRESS_LEN 100
 
 typedef enum
 {
@@ -36,10 +49,18 @@ typedef enum
 	THREAD_IPERF_DUT_TX,
 	THREAD_IPERF_DUT_RX,
 	
-	
 	UNKOWN_TYPE = 255
 }E_THREAD_TYPE;
 
+typedef enum
+{
+	STATUS_READY = 0,
+	STATUS_RUNNING,
+	STATUS_PASS,
+	STATUS_FAIL,
+
+	STATUS_UNKOWN = 255
+}E_TEST_STATUS;
 
 //ERRCODE
 typedef enum
@@ -52,9 +73,6 @@ typedef enum
 	E_ADB_RSSI_ERR,
 	E_ADB_RSSI_NULL
 
-
-
-
 }E_ADBFORM_RETURN;
 // CADBFormDlg 对话框
 class CADBFormDlg : public CDialog
@@ -65,6 +83,9 @@ public:
 
 // 对话框数据
 	enum { IDD = IDD_ADBFORM_DIALOG };
+
+	CColorStatic	m_stTestStatus;
+	CButtonST       m_StatAll;
 
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
@@ -95,17 +116,19 @@ public:
 	DWORD        NoLogInfoDoFunc(WPARAM wPamam, LPARAM lParam);
 public:
 	CEdit     Cot_msginfoshow;
+	CProgressCtrl ProcessAll;
 	CPipeRun  *RunObj;
 	CPipeRun  *DevRunObj;
 	HANDLE    hGetInfoHandle;
 	DWORD     dGetInfoHandleID;
-	HANDLE    hLogThread;
+	HANDLE    hPCIperfServer;
 	//
 	HANDLE    hNoInfoHandle;
 	DWORD     dNoInfoHandleID;
 	HANDLE    hNoLogThread;
 	CIniFile  m_hConfig;        //config file handle
 	void      RunUIChange(bool RunFlag);
+	void      SetProgressPos(int CurrPos,int MaxPos=MAX_PROGRESS_LEN);
 	char      PWD[MAX_PATH];
 	DWORD     DetectDevices(void);
 	void      UpdateLogInfo(DWORD retcode,CString loginfo);
@@ -124,6 +147,8 @@ public:
 	DWORD     IperfDutRx(void);
 	BOOL      SaveConfig(void);
 	BOOL      LoadDefaultConfig(void);
+	void      UpdateTestStatus(E_TEST_STATUS status,DWORD errcode=0);
+	BOOL      ConfigIsReady(void);
 public:
 	// PC ip address
 	CString cPCIPaddr;
@@ -133,5 +158,17 @@ public:
 	CString cPrj;
 	// work order
 	CString cWoid;
-	
+public:
+	// Start all
+	afx_msg void OnBnClickedButtonStart();
+
+	// RSSI Checkbox
+	CButton   cbRSSI;
+	BOOL      m_ckRSSI;
+    // Throughput Tx(device upload)
+	CButton   cbThpTx;
+	BOOL      m_ckThpTx;
+	// Throughput Rx(device download)
+	CButton   cbThpRx;
+	BOOL      m_ckThpRx;
 };
