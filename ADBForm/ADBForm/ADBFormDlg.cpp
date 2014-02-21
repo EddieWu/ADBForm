@@ -384,7 +384,7 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 			dStartRet = AnalyseStr(0,TestFlag,IPERFStr);
 			if (dStartRet == E_ADB_SUCCESS || dStartRet == E_ADB_THPRX_LESS)
 			{
-				SetEvent(hTHPTxTest);
+				SetEvent(hTHPRxTest);
 				break;
 			}
 		}
@@ -437,6 +437,19 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 	if (TestFlag==THREAD_WIFI_RSSI)
 	{
 		SetEvent(hRSSITest);
+	}
+	if (RunObj!=NULL)
+	{
+		RunObj->DestroyProcess();
+	}
+	//
+	if (TestFlag==THREAD_IPERF_TX)
+	{
+		SetEvent(hTHPTxTest);
+	}
+	if (TestFlag==THREAD_IPERF_RX)
+	{
+		SetEvent(hTHPRxTest);
 	}
 	RunObj->Close();
 	delete RunObj;
@@ -953,6 +966,10 @@ DWORD CADBFormDlg::NoLogInfoDoFunc(WPARAM wPamam, LPARAM lParam)
 		UpdateLogInfo(-1,"\r\n");
 	}
 
+	if (DevRunObj!=NULL)
+	{
+		DevRunObj->DestroyProcess();
+	}
 	//end of thread
 	DevRunObj->Close();
 	delete DevRunObj;
@@ -1308,7 +1325,27 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 			if (RunObj!=NULL)
 			{
 				RunObj->DestroyProcess();
+				//delete RunObj;
+				//RunObj = NULL;
 			}
+			if (DevRunObj!=NULL)
+			{
+				DevRunObj->DestroyProcess();
+				//delete DevRunObj;
+				//DevRunObj = NULL;
+			}
+		}
+		if (RunObj!=NULL)
+		{
+			RunObj->DestroyProcess();
+			//delete RunObj;
+			//RunObj = NULL;
+		}
+		if (DevRunObj!=NULL)
+		{
+			DevRunObj->DestroyProcess();
+			//delete DevRunObj;
+			//DevRunObj = NULL;
 		}
 		Sleep(200);
 		if (dStartRet!=E_ADB_SUCCESS)
@@ -1334,6 +1371,22 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 			{
 				RunObj->DestroyProcess();
 			}
+			if (DevRunObj!=NULL)
+			{
+				DevRunObj->DestroyProcess();
+			}
+		}
+		if (RunObj!=NULL)
+		{
+			RunObj->DestroyProcess();
+			//delete RunObj;
+			//RunObj = NULL;
+		}
+		if (DevRunObj!=NULL)
+		{
+			DevRunObj->DestroyProcess();
+			//delete DevRunObj;
+			//DevRunObj = NULL;
 		}
 		Sleep(200);
 		if (dStartRet!=E_ADB_SUCCESS)
