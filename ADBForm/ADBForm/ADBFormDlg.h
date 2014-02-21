@@ -13,13 +13,19 @@
 #define CMD_ADB_DEVICES    ("\\adb\\adb devices")
 #define CMD_ADB_SHELL      ("\\adb\\adb shell")
 #define CMD_ADB_SHELL_WLAN ("\\adb\\adb shell dumpsys wifi")
+#define CMD_ADB_SHELL_GPS  ("\\adb\\adb shell am broadcast -a ACERSTARTGPSTEST")
+#define CMD_ADB_GPS_FETCH  ("\\adb\\adb logcat -b main -v time -s ACERGPS")
+//#define CMD_ADB_GPS_FETCH  ("\\adb\\adb logcat -b main -v time")
+
 //throughput test
 //Tx test
 #define CMD_PC_IPERF_TX    ("\\bin\\iperf.exe -s -P 0 -i 1 -p 5001 -C -f k")
-#define CMD_ADB_SHELL_TX   ("\\adb\\adb shell iperf -c PCIP -t 30 -i 1")
+//#define CMD_ADB_SHELL_TX   ("\\adb\\adb shell iperf -c PCIP -t 30 -i 1")
+#define CMD_ADB_SHELL_TX   ("\\adb\\adb shell iperf -c PCIP -t ")
 //Rx test
 #define CMD_ADB_SHELL_RX   ("\\adb\\adb shell iperf -s")
-#define CMD_PC_IPERF_RX    ("\\bin\\iperf.exe -c DUTIP -P 1 -i 1 -p 5001 -C -f k -t 30 -T 1")
+//#define CMD_PC_IPERF_RX    ("\\bin\\iperf.exe -c DUTIP -P 1 -i 1 -p 5001 -C -f k -t 30 -T 1")
+#define CMD_PC_IPERF_RX    ("\\bin\\iperf.exe -c DUTIP -P 1 -i 1 -p 5001 -C -f k -t ")
 
 //key word
 #define KEY_ADB_DEVICES       "List of devices attached"
@@ -28,6 +34,13 @@
 #define KEY_ENTER             "\r\n"
 #define KEY_IPADDR            "ipaddr"
 #define KEY_GATEWAY           "gateway"
+//GPS key word
+#define KEY_GPS_SATECNT       "satelliteCount"
+//IPERF Key Word
+#define KEY_IPERF_RESULT      "0.0-30.0 sec"  //some times 0.0-30.2 sec
+#define KEY_IPERF_KBYTES      "KBytes"
+#define KEY_IPERF_KBITSPER    "Kbits/sec"
+
 
 //color
 #define COLOR_READY     RGB(27, 136, 228)
@@ -48,6 +61,7 @@ typedef enum
 	THREAD_IPERF_RX,
 	THREAD_IPERF_DUT_TX,
 	THREAD_IPERF_DUT_RX,
+	THREAD_GPS_RX,
 	
 	UNKOWN_TYPE = 255
 }E_THREAD_TYPE;
@@ -71,9 +85,32 @@ typedef enum
 	E_ADB_NODUT,
 	E_ADB_MULTIDEVICES,
 	E_ADB_RSSI_ERR,
-	E_ADB_RSSI_NULL
+	E_ADB_RSSI_NULL,
+	E_ADB_RSSI_LESS,
+	E_ADB_GPS_ERR,
+	E_ADB_GPS_CNLESS,
+	E_ADB_GPS_SATLESS, //satellite
+	E_ADB_GPS_FORMAT,
+	E_ADB_THPTX_ERR,
+	E_ADB_THPTX_LESS,
+	E_ADB_THPRX_ERR,
+	E_ADB_THPRX_LESS
 
 }E_ADBFORM_RETURN;
+//ERRCODE
+
+//wnd size type
+typedef enum
+{
+	E_WND_NORMAL = 0,
+	E_WND_DEBUG
+
+}E_WND_SIZE;
+#define DEBUG_FLAG       5144
+#define FORM_WIDTH       0x0000025e
+#define FROM_NOR_HEIGHT  0x00000171
+#define FROM_COF_HEIGHT  0x00000220
+#define FROM_DBG_HEIGHT  0x000001a6
 // CADBFormDlg ¶Ô»°¿ò
 class CADBFormDlg : public CDialog
 {
@@ -110,11 +147,18 @@ public:
 	afx_msg void OnBnClickedButton4();  //IperfR
 	afx_msg void OnBnClickedButton5();  //DutT
 	afx_msg void OnBnClickedButton6();  //DutR
+	afx_msg void OnBnClickedButton7();  //GPS
 	static DWORD LogInfoShow(LPVOID lpParam);
 	DWORD        LogInfoShowFunc(WPARAM wPamam, LPARAM lParam);
 	static DWORD NoLogInfoDo(LPVOID lpParam);
 	DWORD        NoLogInfoDoFunc(WPARAM wPamam, LPARAM lParam);
+	static DWORD MainThread(LPVOID lpParam);
+	DWORD        MainThreadDo(WPARAM wPamam, LPARAM lParam);
+	HANDLE    hMainThreadHandle;
+	DWORD     dMainThreadHandleID;
 public:
+	//debug flag
+	int       DBGFlag;
 	CEdit     Cot_msginfoshow;
 	CProgressCtrl ProcessAll;
 	CPipeRun  *RunObj;
@@ -122,7 +166,18 @@ public:
 	HANDLE    hGetInfoHandle;
 	DWORD     dGetInfoHandleID;
 	HANDLE    hPCIperfServer;
-	//
+	HANDLE    hDUTIperfServer;
+	//detect device action handle
+	HANDLE    hDetectDevice;
+	// GPS action handle
+	HANDLE    hGPSTest;
+	// RSSI test
+	HANDLE    hRSSITest;
+	// Throughput Tx(Upload) test
+	HANDLE    hTHPTxTest;
+	// Throughput Rx(Download) test
+	HANDLE    hTHPRxTest;
+
 	HANDLE    hNoInfoHandle;
 	DWORD     dNoInfoHandleID;
 	HANDLE    hNoLogThread;
@@ -135,9 +190,13 @@ public:
 	DWORD     WLANInfo(void);
 	CString   UnDoStrBuff;
 	E_THREAD_TYPE     TestFlag;
-	DWORD     AnalyseStr(double dSpec,E_THREAD_TYPE type);
+	E_THREAD_TYPE     TestFlag2;
+	DWORD     AnalyseStr(double dSpec,E_THREAD_TYPE type,CString KeyStr="");
 	DWORD     AnalyseDevices(void);
 	DWORD     AnalyseRSSI(void);
+	DWORD     AnalyseGPS(void);
+	DWORD     AnalyseTHPTx(CString ResultStr);
+	DWORD     AnalyseTHPRx(CString ResultStr);
 	DWORD     SearchRSSIArrary(int RSSIArr[],CString mStr);	
 	int       MaxRSSI;
 	DWORD     IperfTx(void);
@@ -149,6 +208,8 @@ public:
 	BOOL      LoadDefaultConfig(void);
 	void      UpdateTestStatus(E_TEST_STATUS status,DWORD errcode=0);
 	BOOL      ConfigIsReady(void);
+	void      SetWindowSize(E_WND_SIZE sType);
+	DWORD     GPSRx(void);
 public:
 	// PC ip address
 	CString cPCIPaddr;
@@ -161,7 +222,7 @@ public:
 public:
 	// Start all
 	afx_msg void OnBnClickedButtonStart();
-
+	DWORD     dStartRet;
 	// RSSI Checkbox
 	CButton   cbRSSI;
 	BOOL      m_ckRSSI;
@@ -171,4 +232,24 @@ public:
 	// Throughput Rx(device download)
 	CButton   cbThpRx;
 	BOOL      m_ckThpRx;
+	// GPS test checkbox
+	CButton   cbGPS;
+	BOOL      m_ckGPS;
+	//timeout
+	int       iConnectTimeout;
+	int       iIperfServerTime;// microsecond
+	int       iGpsTimeout;
+	int       iRSSITimeout;
+	int       iTHPTxTimeout;
+	int       iTHPRxTimeout;
+	int       iTHPTimeBuff;
+
+	//SPEC
+	int       iGPSCNSpec;
+	int       iRSSISpec;
+	int       iThpTxSpec;
+	int       iThpRxSpec;
+	//throughput test config
+	int       iTransmitTime;
+	int       iIntervalTime;
 };

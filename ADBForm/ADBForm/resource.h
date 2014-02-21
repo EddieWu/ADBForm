@@ -27,8 +27,9 @@
 #define IDC_CHECK_RSSI                  1018
 #define IDC_CHECK_THPTX                 1019
 #define IDC_CHECK3                      1020
-#define IDC_CHECK4                      1021
+#define IDC_CHECK_GPS                   1020
 #define IDC_CHECK_THPRX                 1021
+#define IDC_BUTTON7                     1022
 
 // Next default values for new objects
 // 

@@ -1,0 +1,337 @@
+Detect devices:
+E:\Project\06.Acer\DroidConn\ADBForm\release\adb\adb devices
+List of devices attached 
+BM6HFAPVPJDQ7LT8	device
+
+DumpSys WiFi:
+E:\Project\06.Acer\DroidConn\ADBForm\release\adb\adb shell dumpsys wifi
+Wi-Fi is enabled
+
+Stay-awake conditions: 0
+
+
+
+Internal state:
+
+interface wlan0 runState=Running
+
+SSID: HWTEST, BSSID: 8c:21:0a:42:5c:1a, MAC: 00:08:22:5a:b4:fb, Supplicant state: COMPLETED, RSSI: -45, Link speed: 54, Net ID: 0
+
+ipaddr 192.168.25.100 gateway 192.168.25.1 netmask 255.255.255.0 dns1 192.168.25.1 dns2 8.8.8.8 DHCP server 192.168.25.1 lease 7200 seconds
+
+haveIpAddress=true, obtainingIpAddress=false, scanModeActive=false
+
+lastSignalLevel=3, explicitlyDisabled=false
+
+
+
+Latest scan results:
+
+  BSSID              Frequency   RSSI  Flags             SSID
+
+  00:87:36:06:24:46       2412    -28  [WPA-PSK-CCMP][WPA2-PSK-CCMP]  Huaqin9999
+
+  8c:21:0a:42:5c:1a       2462    -46  [WPA-PSK-CCMP][WPA2-PSK-CCMP][WPS]  HWTEST
+
+  02:0e:0e:20:00:a2       2462    -58  [WPA-PSK-TKIP+CCMP][WPA2-PSK-TKIP+CCMP]  HQ_WLAN
+
+  14:e6:e4:95:23:b6       2427    -63  [WPA-PSK-CCMP][WPA2-PSK-CCMP][WPS]  GJGNTEST
+
+  80:56:f2:95:64:a4       2462    -64  [WPA2-PSK-CCMP]   LICHANGHUA
+
+  bc:96:80:22:c0:4b       2412    -67  [WPA-PSK-CCMP][WPA2-PSK-CCMP]  Baidu1121
+
+  04:da:d2:9d:5e:03       2412    -68  [WPA2-PSK-CCMP]   VIP-guest
+
+  78:a1:06:6b:4a:fc       2462    -70  [WPA-PSK-TKIP+CCMP][WPA2-PSK-TKIP+CCMP][WPS]  1-2-ceshibu
+
+  00:36:76:24:61:0a       2412    -76  [WPA2-PSK-CCMP]   SoftAP-0A
+
+  02:0e:0e:20:00:b5       2462    -76  [WPA-PSK-TKIP+CCMP][WPA2-PSK-TKIP+CCMP]  HQ_WLAN
+
+  02:0e:0e:20:0b:7f       2412    -77  [WPA-PSK-TKIP+CCMP][WPA2-PSK-TKIP+CCMP]  HQ_WLAN
+
+  c0:18:85:5f:40:6c       2462    -78  [WPA2-PSK-CCMP]   richard
+
+  b4:e9:b0:80:e2:c3       2412    -79  [WPA2-PSK-CCMP]   VIP-guest
+
+  6c:e8:73:4c:97:00       2437    -91  [WPA2-PSK-TKIP+CCMP]  LINK2
+
+  ec:88:8f:a0:a8:68       2437    -92  [WPA2-PSK-TKIP+CCMP]  LINK3
+
+  00:22:c0:00:01:ce       2422    -56                    CE-LINK
+
+  10:0e:0e:20:00:a2       2462    -58                    HQKJ_TEST
+
+  04:da:d2:9d:5e:00       2412    -67                    VIP
+
+  04:da:d2:9d:5e:02       2412    -68                    HQKJ-Guest
+
+  04:da:d2:9d:5e:01       2412    -68                    HQKJ-Internal
+
+  10:0e:0e:20:00:b5       2462    -75                    HQKJ_TEST
+
+  10:0e:0e:20:0b:7f       2412    -76                    HQKJ_TEST
+
+  b4:e9:b0:80:e2:c1       2412    -80                    HQKJ-Internal
+
+  b4:e9:b0:80:e2:c2       2412    -80                    HQKJ-Guest
+
+  04:da:d2:cf:2c:20       2412    -86                    VIP
+
+  b4:e9:b0:80:a6:e1       2437    -89                    HQKJ-Internal
+
+  b4:e9:b0:80:a6:e2       2437    -90                    HQKJ-Guest
+
+  04:da:d2:cf:2c:70       2437    -91                    VIP
+
+  00:00:00:00:00:00       2412      0                    NVRAM WARNING: Err = 0x10
+
+
+
+Locks acquired: 0 full, 0 full high perf, 4 scan
+
+Locks released: 0 full, 0 full high perf, 4 scan
+
+
+
+Locks held:
+
+IPERF TX:
+E:\Project\06.Acer\DroidConn\ADBForm\release\bin\iperf.exe -s -P 0 -i 1 -p 5001 -C -f k
+IPERF TX(DUT):
+E:\Project\06.Acer\DroidConn\ADBForm\release\adb\adb shell iperf -c 192.168.25.252 -t 30 -i 1
+------------------------------------------------------------
+Server listening on TCP port 5001
+TCP window size: 8.00 KByte (default)
+------------------------------------------------------------
+[1872] local 192.168.25.252 port 5001 connected with 192.168.25.100 port 46853
+[ ID] Interval       Transfer     Bandwidth
+[1872]  0.0- 1.0 sec  1802 KBytes  14758 Kbits/sec
+[1872]  1.0- 2.0 sec  1728 KBytes  14156 Kbits/sec
+[1872]  2.0- 3.0 sec  1872 KBytes  15337 Kbits/sec
+[1872]  3.0- 4.0 sec  1831 KBytes  15001 Kbits/sec
+[1872]  4.0- 5.0 sec  1817 KBytes  14885 Kbits/sec
+[1872]  5.0- 6.0 sec  1923 KBytes  15754 Kbits/sec
+[1872]  6.0- 7.0 sec  1895 KBytes  15523 Kbits/sec
+[1872]  7.0- 8.0 sec  1776 KBytes  14550 Kbits/sec
+[1872]  8.0- 9.0 sec  1932 KBytes  15824 Kbits/sec
+[1872]  9.0-10.0 sec  1908 KBytes  15627 Kbits/sec
+[1872] 10.0-11.0 sec  1902 KBytes  15580 Kbits/sec
+[1872] 11.0-12.0 sec  1857 KBytes  15210 Kbits/sec
+[1872] 12.0-13.0 sec  2026 KBytes  16600 Kbits/sec
+[1872] 13.0-14.0 sec  2045 KBytes  16750 Kbits/sec
+[1872] 14.0-15.0 sec  1837 KBytes  15048 Kbits/sec
+[1872] 15.0-16.0 sec  1483 KBytes  12152 Kbits/sec
+[1872] 16.0-17.0 sec  1799 KBytes  14735 Kbits/sec
+[1872] 17.0-18.0 sec  1447 KBytes  11850 Kbits/sec
+[1872] 18.0-19.0 sec  1681 KBytes  13773 Kbits/sec
+[1872] 19.0-20.0 sec  1919 KBytes  15719 Kbits/sec
+[ ID] Interval       Transfer     Bandwidth
+[1872] 20.0-21.0 sec  1968 KBytes  16125 Kbits/sec
+[1872] 21.0-22.0 sec  1683 KBytes  13785 Kbits/sec
+[1872] 22.0-23.0 sec  1090 KBytes  8931 Kbits/sec
+[1872] 23.0-24.0 sec  1727 KBytes  14144 Kbits/sec
+[1872] 24.0-25.0 sec  1861 KBytes  15245 Kbits/sec
+[1872] 25.0-26.0 sec  1464 KBytes  11989 Kbits/sec
+[1872] 26.0-27.0 sec  1669 KBytes  13669 Kbits/sec
+[1872] 27.0-28.0 sec  1809 KBytes  14816 Kbits/sec
+[1872] 28.0-29.0 sec  1734 KBytes  14202 Kbits/sec
+[1872] 29.0-30.0 sec  1859 KBytes  15233 Kbits/sec
+[1872]  0.0-30.1 sec  53536 KBytes  14566 Kbits/sec
+DEVICE LOG START[
+------------------------------------------------------------
+
+Client connecting to 192.168.25.252, TCP port 5001
+
+TCP window size:   512 KByte (default)
+
+------------------------------------------------------------
+
+[  3] local 192.168.25.100 port 46853 connected with 192.168.25.252 port 5001
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3]  0.0- 1.0 sec  1.98 MBytes  16.6 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3]  1.0- 2.0 sec  1.66 MBytes  13.9 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3]  2.0- 3.0 sec  1.88 MBytes  15.8 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3]  3.0- 4.0 sec  1.78 MBytes  14.9 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3]  4.0- 5.0 sec  1.77 MBytes  14.9 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3]  5.0- 6.0 sec  1.89 MBytes  15.9 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3]  6.0- 7.0 sec  1.77 MBytes  14.8 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3]  7.0- 8.0 sec  1.77 MBytes  14.8 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3]  8.0- 9.0 sec  1.88 MBytes  15.8 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3]  9.0-10.0 sec  1.88 MBytes  15.7 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 10.0-11.0 sec  1.87 MBytes  15.7 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 11.0-12.0 sec  1.89 MBytes  15.9 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 12.0-13.0 sec  1.88 MBytes  15.8 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 13.0-14.0 sec  2.00 MBytes  16.8 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 14.0-15.0 sec  1.88 MBytes  15.8 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 15.0-16.0 sec  1.34 MBytes  11.2 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 16.0-17.0 sec  1.78 MBytes  14.9 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 17.0-18.0 sec  1.45 MBytes  12.1 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 18.0-19.0 sec  1.66 MBytes  14.0 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 19.0-20.0 sec  1.88 MBytes  15.8 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 20.0-21.0 sec  1.88 MBytes  15.8 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 21.0-22.0 sec  1.66 MBytes  13.9 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 22.0-23.0 sec  1.11 MBytes  9.31 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 23.0-24.0 sec  1.68 MBytes  14.1 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 24.0-25.0 sec  1.77 MBytes  14.8 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 25.0-26.0 sec  1.43 MBytes  12.0 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 26.0-27.0 sec  1.67 MBytes  14.0 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 27.0-28.0 sec  1.77 MBytes  14.9 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 28.0-29.0 sec  1.65 MBytes  13.8 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3] 29.0-30.0 sec  1.77 MBytes  14.9 Mbits/sec
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  3]  0.0-30.0 sec  52.3 MBytes  14.6 Mbits/sec
+
+]DEVICE LOG END
+IPERF TX(DUT):DONE!
+IPERF RX(DUT):
+E:\Project\06.Acer\DroidConn\ADBForm\release\adb\adb shell iperf -s
+IPERF RX:
+E:\Project\06.Acer\DroidConn\ADBForm\release\bin\iperf.exe -c 192.168.25.100 -P 1 -i 1 -p 5001 -C -f k -t 30 -T 1
+------------------------------------------------------------
+Client connecting to 192.168.25.100, TCP port 5001
+TCP window size: 8.00 KByte (default)
+------------------------------------------------------------
+[1912] local 192.168.25.252 port 26150 connected with 192.168.25.100 port 5001
+[ ID] Interval       Transfer     Bandwidth
+[1912]  0.0- 1.0 sec  1000 KBytes  8192 Kbits/sec
+[1912]  1.0- 2.0 sec   952 KBytes  7799 Kbits/sec
+[1912]  2.0- 3.0 sec  1056 KBytes  8651 Kbits/sec
+[1912]  3.0- 4.0 sec  1032 KBytes  8454 Kbits/sec
+[1912]  4.0- 5.0 sec   960 KBytes  7864 Kbits/sec
+[1912]  5.0- 6.0 sec   888 KBytes  7274 Kbits/sec
+[1912]  6.0- 7.0 sec   848 KBytes  6947 Kbits/sec
+[1912]  7.0- 8.0 sec   952 KBytes  7799 Kbits/sec
+[1912]  8.0- 9.0 sec   864 KBytes  7078 Kbits/sec
+[1912]  9.0-10.0 sec   928 KBytes  7602 Kbits/sec
+[1912] 10.0-11.0 sec   992 KBytes  8126 Kbits/sec
+[1912] 11.0-12.0 sec   864 KBytes  7078 Kbits/sec
+[1912] 12.0-13.0 sec   776 KBytes  6357 Kbits/sec
+[1912] 13.0-14.0 sec   920 KBytes  7537 Kbits/sec
+[1912] 14.0-15.0 sec   800 KBytes  6554 Kbits/sec
+[1912] 15.0-16.0 sec   944 KBytes  7733 Kbits/sec
+[1912] 16.0-17.0 sec   936 KBytes  7668 Kbits/sec
+[1912] 17.0-18.0 sec   920 KBytes  7537 Kbits/sec
+[1912] 18.0-19.0 sec   872 KBytes  7143 Kbits/sec
+[1912] 19.0-20.0 sec   896 KBytes  7340 Kbits/sec
+[ ID] Interval       Transfer     Bandwidth
+[1912] 20.0-21.0 sec   920 KBytes  7537 Kbits/sec
+[1912] 21.0-22.0 sec   896 KBytes  7340 Kbits/sec
+[1912] 22.0-23.0 sec  1000 KBytes  8192 Kbits/sec
+[1912] 23.0-24.0 sec   912 KBytes  7471 Kbits/sec
+[1912] 24.0-25.0 sec   928 KBytes  7602 Kbits/sec
+[1912] 25.0-26.0 sec   936 KBytes  7668 Kbits/sec
+[1912] 26.0-27.0 sec   952 KBytes  7799 Kbits/sec
+[1912] 27.0-28.0 sec   832 KBytes  6816 Kbits/sec
+[1912] 28.0-29.0 sec   832 KBytes  6816 Kbits/sec
+[1912] 29.0-30.0 sec   824 KBytes  6750 Kbits/sec
+[1912]  0.0-30.0 sec  27440 KBytes  7489 Kbits/sec
+IPERF RX(DUT):DONE!
+DEVICE LOG START[
+------------------------------------------------------------
+
+Server listening on TCP port 5001
+
+TCP window size: 1.00 MByte (default)
+
+------------------------------------------------------------
+
+[  4] local 192.168.25.100 port 5001 connected with 192.168.25.252 port 26150
+
+[ ID] Interval       Transfer     Bandwidth
+
+[  4]  0.0-30.0 sec  26.8 MBytes  7.49 Mbits/sec
+
+]DEVICE LOG END

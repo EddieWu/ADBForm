@@ -75,18 +75,26 @@ DWORD   CPipeRun::UpdateOutStr(char oStr[])
 	DWORD bytesRead;
 	bReadFlag = true;
 
-	if (ReadFile(hPipeRead,buffer,40959,&bytesRead,NULL) == NULL)  //读取管道
+	try
 	{
-		bReadFlag = false;
-		return E_READ_INFO_ERR;
+		if (ReadFile(hPipeRead,buffer,40959,&bytesRead,NULL) == NULL)  //读取管道
+		{
+			bReadFlag = false;
+			return E_READ_INFO_ERR;
+		}
+		else
+		{
+			strOutput += buffer;
+			strncpy_s(oStr,40959,buffer,strlen(buffer));
+			Sleep(1);
+			return E_READ_INFO_CONTINUE;
+		}
 	}
-	else
+	catch (CException* e)
 	{
-		strOutput += buffer;
-		strncpy_s(oStr,40960,buffer,strlen(buffer));
-		Sleep(1);
-		return E_READ_INFO_CONTINUE;
+		return E_READ_INFO_ERR;	
 	}
+	
 
 	/*
 	while (true) 
