@@ -134,6 +134,21 @@ BOOL CADBFormDlg::OnInitDialog()
     hPCIperfServer = NULL;
 	LoadDefaultConfig();
 
+	// log file crate
+	m_sLogFilePath     = "";
+	m_sLogFilePathFull = "";
+	m_sLogFilePath.Format("%s\\log",PWD);
+	m_sLogFilePathFull.Format("%s\\log\\_temp_.log",PWD);
+	hLogFile.SetFilePath(m_sLogFilePath);
+	bLogFileNormal = hLogFile.Open(m_sLogFilePathFull,CFile::modeCreate|CFile::modeNoTruncate|CFile::modeReadWrite);
+	if(!bLogFileNormal)
+	{
+		AfxMessageBox("create log file failure!");
+	}
+	else
+	{
+		hLogFile.SeekToEnd();
+	}
 	//debug
 	/*
 	CFont    m_font;
@@ -515,6 +530,7 @@ DWORD CADBFormDlg::DetectDevices(void)
 void CADBFormDlg::UpdateLogInfo(DWORD retcode,CString loginfo)
 {
 	CString MSG_Buffer = "";
+	CString ForLogFile;
 	GetDlgItemText(IDC_EDIT_MSGSHOW,MSG_Buffer);
 	if (loginfo.GetLength()==0)
 	{
@@ -526,8 +542,20 @@ void CADBFormDlg::UpdateLogInfo(DWORD retcode,CString loginfo)
 		//SetDlgItemText(IDC_EDIT_MSGSHOW,MSG_Buffer);
 		Cot_msginfoshow.SetWindowText(MSG_Buffer);
 		Cot_msginfoshow.SetSel(MSG_Buffer.GetLength(),MSG_Buffer.GetLength());
+		//hLogFile.Write(loginfo,loginfo.GetLength());
+		LogFileUpdate(loginfo);
 	}
 	UpdateWindow();
+	if (retcode==5)
+	{
+		if (bLogFileNormal)
+		{
+			ForLogFile.Format("\r\nRETURN CODE[%d]\r\n",dStartRet);
+			LogFileUpdate(ForLogFile);
+			hLogFile.Close();
+			bLogFileNormal = FALSE;
+		}
+	}
 }
 
 void CADBFormDlg::OnBnClickedButton1()  //dut detect test
@@ -671,6 +699,10 @@ DWORD CADBFormDlg::AnalyseDevices(void)
 			return E_ADB_MULTIDEVICES;
 		}
 	}
+	CString TestSN = TestBuff.Mid(0,iPos);
+	TestSN.TrimLeft();
+	TestSN.TrimRight();
+	LogFileUpdate(TestSN,1);
 	//AfxMessageBox("Detect OK!");
 	return E_ADB_SUCCESS;
 }
@@ -1190,6 +1222,7 @@ void CADBFormDlg::OnBnClickedButtonStart()
 	UpdateTestStatus(STATUS_RUNNING);
 	// Connect device
 
+	UpdateLogInfo(-1,"["+GetCurTimeStr()+"] START\r\n");
 	hMainThreadHandle = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)MainThread,this,NULL,&dMainThreadHandleID);
 	//Sleep(2000);
 	//AfxMessageBox("Click More!");
@@ -1249,6 +1282,7 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 	//Sleep(1000);
 	// detect device
 	hDetectDevice = CreateEvent(NULL, FALSE, FALSE, NULL);
+	UpdateLogInfo(-1,"["+GetCurTimeStr()+"] ");
 	DetectDevices();
 	if(WAIT_TIMEOUT==WaitForSingleObject(hDetectDevice,iConnectTimeout))
 	{
@@ -1263,6 +1297,8 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 		UpdateTestStatus(STATUS_FAIL,dStartRet);
 		// enabled button
 		RunUIChange(false);
+		// test end
+		UpdateLogInfo(5,"\r\n["+GetCurTimeStr()+"] End\r\n");
 		return dStartRet;
 	}
 	// GPS test
@@ -1270,6 +1306,7 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 	{
 		// GPS action handle
 		hGPSTest = CreateEvent(NULL, FALSE, FALSE, NULL);
+		UpdateLogInfo(-1,"["+GetCurTimeStr()+"] ");
 		GPSRx();
 		if(WAIT_TIMEOUT==WaitForSingleObject(hGPSTest,iGpsTimeout))
 		{
@@ -1286,12 +1323,15 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 			UpdateTestStatus(STATUS_FAIL,dStartRet);
 			// enabled button
 			RunUIChange(false);
+			// test end
+			UpdateLogInfo(5,"\r\n["+GetCurTimeStr()+"] End\r\n");
 			return dStartRet;
 		}
 	}
 	// RSSI test
 	if (m_ckRSSI)
 	{
+		UpdateLogInfo(-1,"["+GetCurTimeStr()+"] ");
 		WLANInfo();
 		// RSSI action handle
 		hRSSITest = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -1309,12 +1349,15 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 			UpdateTestStatus(STATUS_FAIL,dStartRet);
 			// enabled button
 			RunUIChange(false);
+			// test end
+			UpdateLogInfo(5,"\r\n["+GetCurTimeStr()+"] End\r\n");
 			return dStartRet;
 		}
 	}
 	// Throughput Tx(Upload) test
 	if (m_ckThpTx)
 	{
+		UpdateLogInfo(-1,"["+GetCurTimeStr()+"] ");
 		IperfTx();
 		Sleep(1);
 		IperfDutTx();
@@ -1354,12 +1397,15 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 			UpdateTestStatus(STATUS_FAIL,dStartRet);
 			// enabled button
 			RunUIChange(false);
+			// test end
+			UpdateLogInfo(5,"\r\n["+GetCurTimeStr()+"] End\r\n");
 			return dStartRet;
 		}
 	}
 	// Throughput Rx(Download) test
 	if (m_ckThpRx)
 	{
+		UpdateLogInfo(-1,"["+GetCurTimeStr()+"] ");
 		IperfDutRx();
 		Sleep(1);
 		IperfRx();
@@ -1395,6 +1441,8 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 			UpdateTestStatus(STATUS_FAIL,dStartRet);
 			// enabled button
 			RunUIChange(false);
+			// test end
+			UpdateLogInfo(5,"\r\n["+GetCurTimeStr()+"] End\r\n");
 			return dStartRet;
 		}
 	}
@@ -1404,6 +1452,109 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 	UpdateTestStatus(STATUS_PASS);
 	// enabled button
 	RunUIChange(false);
-
+	// test end
+	UpdateLogInfo(5,"\r\n["+GetCurTimeStr()+"] End\r\n");
 	return 0;
+}
+
+CString CADBFormDlg::GetCurTimeStr(int iType)
+{
+	//获得当天时间字符串
+	if (0==iType)
+	{
+		CTime Td = CTime::GetCurrentTime();
+		return Td.Format("%Y%m%d");
+	}
+	else if (1==iType)
+	{
+		CTime Td = CTime::GetCurrentTime();
+		return Td.Format("%Y-%m-%d %H:%M:%S");
+	}
+	return "";
+}
+void CADBFormDlg::LogFileUpdate(CString loginfo,int iFlag)
+{
+	if(!bLogFileNormal)
+	{
+		bLogFileNormal = hLogFile.Open(m_sLogFilePathFull,CFile::modeWrite);
+		if (!bLogFileNormal)
+		{
+			return;
+		}
+		else
+		{
+			hLogFile.SeekToEnd();
+		}
+	}
+	if (1==iFlag)
+	{
+		// before rename action
+		//hLogFile.Close();
+		//bLogFileNormal = FALSE;
+		//
+		//CString OldFileName = m_sLogFilePathFull;
+		//hLogFile.SetFilePath();
+		//OldFileName.Replace("_temp_",loginfo);
+		//m_sLogFilePathFull.Replace("_temp_",loginfo);
+        //this function will crash!!!
+		//hLogFile.Rename("_temp_.log",loginfo+".log");
+		//int iRet = ::rename(OldFileName,m_sLogFilePathFull);
+		//DWORD dRet = GetLastError();
+		FileRen(&hLogFile,loginfo);
+		return;
+	}
+	hLogFile.Write(loginfo,loginfo.GetLength());
+}
+
+BOOL CADBFormDlg::FileRen(CFile *oriFile,CString newName)
+{
+	if (oriFile==NULL)
+	{
+		return FALSE;
+	}
+	if (m_sLogFilePathFull.Find(newName)!=-1)
+	{
+		return TRUE;
+	}
+	CString OriFileName = "";
+	OriFileName.Format("%s",oriFile->GetFilePath());
+	m_sLogFilePathFull.Replace("_temp_",newName);
+	try
+	{
+		// read all context
+		UINT bufflen = oriFile->SeekToEnd();
+		char *buffstr = new char[bufflen+1];
+		oriFile->SeekToBegin();
+		oriFile->Read(buffstr,bufflen);
+		// before rename action
+		oriFile->Close();
+		bLogFileNormal = FALSE;
+
+		// delete old file 
+		CFile::Remove(OriFileName);
+		// create new file
+		//CFile Nfile;
+		bLogFileNormal = oriFile->Open(m_sLogFilePathFull,CFile::modeCreate|CFile::modeNoTruncate|CFile::modeReadWrite);
+		if(!bLogFileNormal)
+		{
+			AfxMessageBox("RENAME create log file failure!");
+		}
+		else
+		{
+			bLogFileNormal = TRUE;
+			oriFile->SeekToEnd();
+			oriFile->Write(buffstr,bufflen);
+			oriFile->SeekToEnd();
+			//Nfile.Close();
+		}
+		delete buffstr;
+		//CFile::Rename( OriFileName.GetBuffer(OriFileName.GetLength()), newName.GetBuffer(newName.GetLength()));
+	}
+	catch(CFileException* pEx )
+	{
+		pEx->Delete();
+		return FALSE;
+	}
+
+	return TRUE;
 }

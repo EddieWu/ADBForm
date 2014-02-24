@@ -167,6 +167,12 @@ public:
 	DWORD     dGetInfoHandleID;
 	HANDLE    hPCIperfServer;
 	HANDLE    hDUTIperfServer;
+	// LOG file
+	CString   m_sLogFilePath;
+	CString   m_sLogFilePathFull;
+	CFile     hLogFile;
+	BOOL      bLogFileNormal;
+	BOOL      FileRen(CFile *oriFile,CString newName);
 	//detect device action handle
 	HANDLE    hDetectDevice;
 	// GPS action handle
@@ -210,6 +216,8 @@ public:
 	BOOL      ConfigIsReady(void);
 	void      SetWindowSize(E_WND_SIZE sType);
 	DWORD     GPSRx(void);
+	CString   GetCurTimeStr(int iType=1);
+	void      LogFileUpdate(CString loginfo,int iFlag=0);
 public:
 	// PC ip address
 	CString cPCIPaddr;
