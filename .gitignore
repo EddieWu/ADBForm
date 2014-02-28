@@ -18,9 +18,12 @@ MoreADB/
 *.aps
 *.ncb
 *.opt
+*.rar
+*.png
 icon/
 ADBForm/debug/
 ADBForm/release/
 ADBForm/ADBForm/Debug/
 ADBForm/ADBForm/Release/
+ADBForm_bak140228
 

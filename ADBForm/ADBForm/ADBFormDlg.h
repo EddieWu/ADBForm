@@ -11,10 +11,20 @@
 
 #define TEST_COMMAND       ("F:\\BenKyoU\\CloudWu\\CCPP\\CCpp\\Debug\\CCpp.exe")
 #define CMD_ADB_DEVICES    ("\\adb\\adb devices")
+#define CMD_ADB_GETSN      ("\\adb\\adb shell getprop gsm.serial")
 #define CMD_ADB_SHELL      ("\\adb\\adb shell")
 #define CMD_ADB_SHELL_WLAN ("\\adb\\adb shell dumpsys wifi")
 #define CMD_ADB_SHELL_GPS  ("\\adb\\adb shell am broadcast -a ACERSTARTGPSTEST")
-#define CMD_ADB_GPS_FETCH  ("\\adb\\adb logcat -b main -v time -s ACERGPS")
+//20140226 Wujian add Start
+// 打开手机端应用
+// adb shell am start -n com.huaqin.acergpsandwifitest/.MainActivity
+// 关闭手机端应用
+// adb shell am force-stop com.huaqin.acergpsandwifitest
+#define CMD_ADB_SHELL_INSTALL  ("\\adb\\adb install -r AcerGpsAndWifiTest.apk")
+#define CMD_ADB_SHELL_GPSST    ("\\adb\\adb shell am start -n com.huaqin.acergpsandwifitest/.MainActivity")
+#define CMD_ADB_SHELL_GPSED    ("\\adb\\adb shell am force-stop com.huaqin.acergpsandwifitest")
+//20140226 Wujian add End
+#define CMD_ADB_GPS_FETCH      ("\\adb\\adb logcat -b main -v time -s ACERGPS")
 //#define CMD_ADB_GPS_FETCH  ("\\adb\\adb logcat -b main -v time")
 
 //throughput test
@@ -31,6 +41,9 @@
 #define KEY_ADB_DEVICES       "List of devices attached"
 #define KEY_ADB_DEVICES_DUT   "device"
 #define KEY_RSSI_RESULT       "Flags             SSID"
+#define KEY_WLAN_RUNSTATE     "ConnectedState"//"runState=Running"
+#define KEY_WLAN_IPADDR       "LinkAddresses:"//"ipaddr"
+#define KEY_WLAN_GATEWAY      "Routes:"//"gateway"
 #define KEY_ENTER             "\r\n"
 #define KEY_IPADDR            "ipaddr"
 #define KEY_GATEWAY           "gateway"
@@ -62,6 +75,9 @@ typedef enum
 	THREAD_IPERF_DUT_TX,
 	THREAD_IPERF_DUT_RX,
 	THREAD_GPS_RX,
+	THREAD_GPS_INSTALL,
+	THREAD_GPS_START,
+	THREAD_GPS_STOP,
 	
 	UNKOWN_TYPE = 255
 }E_THREAD_TYPE;
@@ -84,6 +100,9 @@ typedef enum
 	E_ADB_DETECT_ERR,
 	E_ADB_NODUT,
 	E_ADB_MULTIDEVICES,
+	E_ADB_BADSN,
+	E_ADB_RSSI_STOP,
+	E_ADB_RSSI_BADIPADDR,
 	E_ADB_RSSI_ERR,
 	E_ADB_RSSI_NULL,
 	E_ADB_RSSI_LESS,
@@ -177,6 +196,8 @@ public:
 	HANDLE    hDetectDevice;
 	// GPS action handle
 	HANDLE    hGPSTest;
+	HANDLE    hGPSAPKAction;
+	HANDLE    hGPSInstall;
 	// RSSI test
 	HANDLE    hRSSITest;
 	// Throughput Tx(Upload) test
@@ -216,6 +237,9 @@ public:
 	BOOL      ConfigIsReady(void);
 	void      SetWindowSize(E_WND_SIZE sType);
 	DWORD     GPSRx(void);
+	//20140226 Wujian add Start
+    DWORD     HQGPSAction(int actiontype=0);
+	//20140226 Wujian add End
 	CString   GetCurTimeStr(int iType=1);
 	void      LogFileUpdate(CString loginfo,int iFlag=0);
 public:
@@ -260,4 +284,8 @@ public:
 	//throughput test config
 	int       iTransmitTime;
 	int       iIntervalTime;
+	// SN command type
+	int       iGetSNType;
+	// DUT ip get automatically
+	int       iDutIpAuto;
 };

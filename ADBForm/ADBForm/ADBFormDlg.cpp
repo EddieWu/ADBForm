@@ -185,6 +185,9 @@ BOOL CADBFormDlg::OnInitDialog()
 
 	SetWindowSize(DBGFlag==DEBUG_FLAG?E_WND_DEBUG:E_WND_NORMAL);
 
+	// DUT ip get automatically,disable 
+	((CEdit *)GetDlgItem(IDC_EDIT_DUTIP))->EnableWindow(iDutIpAuto==0);
+
 	return FALSE;
 	//return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -498,7 +501,10 @@ void CADBFormDlg::RunUIChange(bool RunFlag)
 	//((CButton *)GetDlgItem(IDC_COMBO_PRJ))->EnableWindow(!RunFlag);
 	//((CButton *)GetDlgItem(IDC_COMBO_WO))->EnableWindow(!RunFlag);
 	((CEdit *)GetDlgItem(IDC_EDIT_PCIP))->EnableWindow(!RunFlag);
-	((CEdit *)GetDlgItem(IDC_EDIT_DUTIP))->EnableWindow(!RunFlag);
+	if(1!=iDutIpAuto)
+	{
+		((CEdit *)GetDlgItem(IDC_EDIT_DUTIP))->EnableWindow(!RunFlag);
+	}
 	((CButton *)GetDlgItem(IDC_BUTTON_START))->EnableWindow(!RunFlag);
 	cbRSSI.EnableWindow(!RunFlag);
 	cbThpTx.EnableWindow(!RunFlag);
@@ -511,7 +517,14 @@ DWORD CADBFormDlg::DetectDevices(void)
 	TestFlag = THREAD_DETECT;
 	char DetectCMD[100] = {0};
 	//sprintf_s(DetectCMD,"%s%s",PWD,CMD_ADB_SHELL);
-	sprintf_s(DetectCMD,"%s%s",PWD,CMD_ADB_DEVICES);
+	if (iGetSNType==0)
+	{
+		sprintf_s(DetectCMD,"%s%s",PWD,CMD_ADB_DEVICES);
+	}
+	else
+	{
+		sprintf_s(DetectCMD,"%s%s",PWD,CMD_ADB_GETSN);
+	}
 	UpdateLogInfo(-1,"Detect devices:\r\n");
 	UpdateLogInfo(-1,DetectCMD);
 	UpdateLogInfo(-1,"\r\n");
@@ -675,34 +688,52 @@ DWORD CADBFormDlg::AnalyseDevices(void)
 {
 	int iPos = -1;
 	CString TestBuff = UnDoStrBuff;
+	CString TestSN   = "";
 	if (TestBuff.GetLength()==0)
 	{
 		return E_ADB_ERROR;
 	}
 
-	iPos = TestBuff.Find(KEY_ADB_DEVICES);
-	if (-1==iPos)
+	if (iGetSNType==0)
 	{
-		return E_ADB_DETECT_ERR;
+		iPos = TestBuff.Find(KEY_ADB_DEVICES);
+		if (-1==iPos)
+		{
+			return E_ADB_DETECT_ERR;
+		}
+		else
+		{
+			TestBuff = TestBuff.Mid(iPos+26);
+			iPos = TestBuff.Find(KEY_ADB_DEVICES_DUT);
+			if (-1==iPos)
+			{
+				return E_ADB_NODUT;
+			}
+			else if (-1!=TestBuff.Find(KEY_ADB_DEVICES_DUT,iPos+6))
+			{
+				//TestBuff = TestBuff.Mid(iPos);
+				return E_ADB_MULTIDEVICES;
+			}
+		}
+		TestSN = TestBuff.Mid(0,iPos);
+		TestSN.TrimLeft();
+		TestSN.TrimRight();
+		LogFileUpdate(TestSN,1);
 	}
 	else
 	{
-		TestBuff = TestBuff.Mid(iPos+26);
-		iPos = TestBuff.Find(KEY_ADB_DEVICES_DUT);
-		if (-1==iPos)
+		TestBuff.TrimLeft();
+		TestSN = TestBuff.Mid(0,25);
+		TestSN.TrimRight();
+		if (TestSN.GetLength()<10)
 		{
-			return E_ADB_NODUT;
+			return E_ADB_BADSN;
 		}
-		else if (-1!=TestBuff.Find(KEY_ADB_DEVICES_DUT,iPos+6))
+		else
 		{
-			//TestBuff = TestBuff.Mid(iPos);
-			return E_ADB_MULTIDEVICES;
+			LogFileUpdate(TestSN,1);
 		}
 	}
-	CString TestSN = TestBuff.Mid(0,iPos);
-	TestSN.TrimLeft();
-	TestSN.TrimRight();
-	LogFileUpdate(TestSN,1);
 	//AfxMessageBox("Detect OK!");
 	return E_ADB_SUCCESS;
 }
@@ -718,6 +749,41 @@ DWORD CADBFormDlg::AnalyseRSSI(void)
 	}
 
 	//find ip address
+	if (iDutIpAuto==1)
+	{
+		//run state check
+		/*
+		interface wlan0 runState=Running   OK
+		interface wlan0 runState=Starting  NG
+		interface wlan0 runState=Stopped   NG
+		*/
+		iPos = TestBuff.Find(KEY_WLAN_RUNSTATE);
+		if (-1==iPos)
+		{
+			return E_ADB_RSSI_STOP;
+		}
+		int IPaddrS = TestBuff.Find(KEY_WLAN_IPADDR);
+		int IPaddrE = TestBuff.Find(KEY_WLAN_GATEWAY);
+		if (IPaddrS==-1 || IPaddrE==-1 || (IPaddrE-IPaddrS<10))
+		{
+			return E_ADB_RSSI_BADIPADDR;
+		}
+		else
+		{
+			//cDUTIPaddr = TestBuff.Mid(IPaddrS+7,IPaddrE-IPaddrS-8);
+			cDUTIPaddr = TestBuff.Mid(IPaddrS+16,IPaddrE-IPaddrS-8);
+			int ixgPos = cDUTIPaddr.Find("/");
+			cDUTIPaddr = cDUTIPaddr.Mid(0,ixgPos);
+			//AfxMessageBox(cDUTIPaddr);
+		}	
+		/*
+		SSID: HWTEST, BSSID: 8c:21:0a:42:5c:1a, MAC: 00:08:22:0a:b4:fb, Supplicant state: COMPLETED, RSSI: -27, Link speed: 54, Net ID: 0
+        ipaddr 192.168.25.101 gateway 192.168.25.1 netmask 255.255.255.0 dns1 192.168.25.1 dns2 8.8.8.8 DHCP server 192.168.25.1 lease 7200 seconds
+		*/
+		// SSID check
+		// RSSI check
+		// Fetch IP
+	}
 	iPos = TestBuff.Find(KEY_RSSI_RESULT);
 	if (-1==iPos)
 	{
@@ -997,6 +1063,14 @@ DWORD CADBFormDlg::NoLogInfoDoFunc(WPARAM wPamam, LPARAM lParam)
 		UpdateLogInfo(-1,"ACERSTARTGPSTEST START DONE!");
 		UpdateLogInfo(-1,"\r\n");
 	}
+	if (TestFlag2 == THREAD_GPS_INSTALL)
+	{
+		SetEvent(hGPSInstall);
+	}
+	if (TestFlag2==THREAD_GPS_START || TestFlag2==THREAD_GPS_STOP)
+	{
+		SetEvent(hGPSAPKAction);
+	}
 
 	if (DevRunObj!=NULL)
 	{
@@ -1099,6 +1173,10 @@ BOOL CADBFormDlg::LoadDefaultConfig(void)
 			       = m_hConfig.GetKeyIntValue("TestItem","IPERF Test Time",30);
 		iIntervalTime
 				   = m_hConfig.GetKeyIntValue("TestItem","IPERF Report Interval Time",1);
+		// SN command type
+		iGetSNType = m_hConfig.GetKeyIntValue("TestItem","Fetch Serial Number",0);
+		// DUT ip get automatically
+		iDutIpAuto = m_hConfig.GetKeyIntValue("TestItem","Fetch DUT IP Automatically",1);
 	}
 	else
 	{
@@ -1153,6 +1231,11 @@ BOOL CADBFormDlg::SaveConfig(void)
 	//throughput test config
 	m_hConfig.SetKeyNumValue("TestItem","IPERF Test Time",iTransmitTime);
 	m_hConfig.SetKeyNumValue("TestItem","IPERF Report Interval Time",iIntervalTime);
+	// SN command type
+	m_hConfig.SetKeyNumValue("TestItem","Fetch Serial Number",iGetSNType);
+	// DUT ip get automatically
+	m_hConfig.SetKeyNumValue("TestItem","Fetch DUT IP Automatically",iDutIpAuto);
+	
 	return TRUE;
 }
 
@@ -1307,6 +1390,17 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 		// GPS action handle
 		hGPSTest = CreateEvent(NULL, FALSE, FALSE, NULL);
 		UpdateLogInfo(-1,"["+GetCurTimeStr()+"] ");
+		//20140226 Wujian add Start
+		hGPSAPKAction = CreateEvent(NULL, FALSE, FALSE, NULL);
+		HQGPSAction(1);
+		if(WAIT_TIMEOUT==WaitForSingleObject(hGPSAPKAction,iGpsTimeout))
+		{
+			if (DevRunObj!=NULL)
+			{
+				DevRunObj->DestroyProcess();
+			}
+		}
+		//20140226 Wujian add End
 		GPSRx();
 		if(WAIT_TIMEOUT==WaitForSingleObject(hGPSTest,iGpsTimeout))
 		{
@@ -1317,6 +1411,10 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 		}
 		//这是为了线程不同步而改，坑
 		Sleep(200);
+		//20140226 Wujian add Start
+		//stop
+		//HQGPSAction();
+		//20140226 Wujian add End
 		if (dStartRet!=E_ADB_SUCCESS)
 		{
 			// running status message show
@@ -1456,7 +1554,73 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 	UpdateLogInfo(5,"\r\n["+GetCurTimeStr()+"] End\r\n");
 	return 0;
 }
+//20140226 Wujian add Start
+DWORD CADBFormDlg::HQGPSAction(int actiontype)
+{
+	char GpsActionCMD[MAX_PATH] = {0};
+	if (actiontype==0) //STOP
+	{
+		TestFlag2 = THREAD_GPS_STOP;
+		sprintf_s(GpsActionCMD,"%s%s",PWD,CMD_ADB_SHELL_GPSED);
+		UpdateLogInfo(-1,"GPS APK STOP:\r\n");
+		UpdateLogInfo(-1,GpsActionCMD);
+		UpdateLogInfo(-1,"\r\n");
 
+		DevRunObj = new CPipeRun(GpsActionCMD,true);
+		DevRunObj->PreparePipe();
+		DevRunObj->RunProgress();
+
+		hNoInfoHandle = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)NoLogInfoDo,this,NULL,&dNoInfoHandleID);
+
+		Sleep(10);
+	}
+	else if (actiontype==1) //START
+	{
+		//APK INSTALL
+#if 1
+		hGPSInstall = CreateEvent(NULL,FALSE,FALSE,NULL);
+		
+		TestFlag2 = THREAD_GPS_INSTALL;
+		sprintf_s(GpsActionCMD,"%s%s",PWD,CMD_ADB_SHELL_INSTALL);
+		UpdateLogInfo(-1,"GPS APK INSTALL:\r\n");
+		UpdateLogInfo(-1,GpsActionCMD);
+		UpdateLogInfo(-1,"\r\n");
+
+		DevRunObj = new CPipeRun(GpsActionCMD,true);
+		DevRunObj->PreparePipe();
+		DevRunObj->RunProgress();
+
+		hNoInfoHandle = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)NoLogInfoDo,this,NULL,&dNoInfoHandleID);
+
+		Sleep(10);
+		if (WAIT_OBJECT_0 != WaitForSingleObject(hGPSInstall,iGpsTimeout))
+		{
+			if (DevRunObj!=NULL)
+			{
+				DevRunObj->DestroyProcess();
+			}
+			return 2;
+		}
+#endif		
+		//APK START
+		TestFlag2 = THREAD_GPS_START;
+		sprintf_s(GpsActionCMD,"%s%s",PWD,CMD_ADB_SHELL_GPSST);
+		UpdateLogInfo(-1,"GPS APK START:\r\n");
+		UpdateLogInfo(-1,GpsActionCMD);
+		UpdateLogInfo(-1,"\r\n");
+
+		DevRunObj = new CPipeRun(GpsActionCMD,true);
+		DevRunObj->PreparePipe();
+		DevRunObj->RunProgress();
+
+		hNoInfoHandle = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)NoLogInfoDo,this,NULL,&dNoInfoHandleID);
+
+		Sleep(10);
+	}
+	
+	return E_ADB_SUCCESS;
+};
+//20140226 Wujian add End
 CString CADBFormDlg::GetCurTimeStr(int iType)
 {
 	//获得当天时间字符串
@@ -1492,7 +1656,7 @@ void CADBFormDlg::LogFileUpdate(CString loginfo,int iFlag)
 		//hLogFile.Close();
 		//bLogFileNormal = FALSE;
 		//
-		//CString OldFileName = m_sLogFilePathFull;
+	//CString OldFileName = m_sLogFilePathFull;
 		//hLogFile.SetFilePath();
 		//OldFileName.Replace("_temp_",loginfo);
 		//m_sLogFilePathFull.Replace("_temp_",loginfo);
