@@ -134,6 +134,9 @@ BOOL CADBFormDlg::OnInitDialog()
     hPCIperfServer = NULL;
 	LoadDefaultConfig();
 
+	//action adb server
+	//DetectDevices();
+	ActionADBServer();
 	// log file crate
 	m_sLogFilePath     = "";
 	m_sLogFilePathFull = "";
@@ -352,6 +355,11 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 	CString IPERFStr = "";
 	char IPERFSeaWord[12] = {0};
 	sprintf_s(IPERFSeaWord,11,"0.0-%d",iTransmitTime);
+	if(TestFlag == THREAD_ADB_SERVER)
+	{
+		RunUIChange(true);
+		UpdateTestStatus(STATUS_UNKOWN);
+	}
 	if(TestFlag==THREAD_IPERF_TX)
 	{
 		hPCIperfServer = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -452,6 +460,12 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 		UpdateLogInfo(-1,"\r\n");
 	}
 	dStartRet = AnalyseStr(0,TestFlag,IPERFStr);
+	if(TestFlag == THREAD_ADB_SERVER)
+	{
+		//must be fix code
+		UpdateTestStatus(STATUS_READY);
+		RunUIChange(false);
+	}
 	if (TestFlag==THREAD_WIFI_RSSI)
 	{
 		SetEvent(hRSSITest);
@@ -515,7 +529,7 @@ void CADBFormDlg::RunUIChange(bool RunFlag)
 DWORD CADBFormDlg::DetectDevices(void)
 {
 	TestFlag = THREAD_DETECT;
-	char DetectCMD[100] = {0};
+	char DetectCMD[MAX_PATH] = {0};
 	//sprintf_s(DetectCMD,"%s%s",PWD,CMD_ADB_SHELL);
 	if (iGetSNType==0)
 	{
@@ -539,7 +553,22 @@ DWORD CADBFormDlg::DetectDevices(void)
 
 	return 0;
 }
+//THREAD_ADB_SERVER
+//BUG FIX
+DWORD CADBFormDlg::ActionADBServer(void)
+{
+	TestFlag = THREAD_ADB_SERVER;
+	char DetectCMD[MAX_PATH] = {0};
+    sprintf_s(DetectCMD,"%s%s",PWD,CMD_ADB_DEVICES);
 
+	RunObj = new CPipeRun(DetectCMD,true);
+	RunObj->PreparePipe();
+	RunObj->RunProgress();
+
+	hGetInfoHandle = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)LogInfoShow,this,NULL,&dGetInfoHandleID);
+
+	return 0;
+}
 void CADBFormDlg::UpdateLogInfo(DWORD retcode,CString loginfo)
 {
 	CString MSG_Buffer = "";
@@ -580,7 +609,7 @@ void CADBFormDlg::OnBnClickedButton1()  //dut detect test
 DWORD CADBFormDlg::WLANInfo(void)
 {
 	TestFlag = THREAD_WIFI_RSSI;
-	char DumpSysCMD[100] = {0};
+	char DumpSysCMD[MAX_PATH] = {0};
 	sprintf_s(DumpSysCMD,"%s%s",PWD,CMD_ADB_SHELL_WLAN);
 	UpdateLogInfo(-1,"DumpSys WiFi:\r\n");
 	UpdateLogInfo(-1,DumpSysCMD);
@@ -725,6 +754,11 @@ DWORD CADBFormDlg::AnalyseDevices(void)
 		TestBuff.TrimLeft();
 		TestSN = TestBuff.Mid(0,25);
 		TestSN.TrimRight();
+		iPos = TestBuff.Find(KEY_ADB_D_NOTFOUND);
+		if (-1!=iPos)
+		{
+			return E_ADB_NODUT;
+		}
 		if (TestSN.GetLength()<10)
 		{
 			return E_ADB_BADSN;
@@ -1177,6 +1211,8 @@ BOOL CADBFormDlg::LoadDefaultConfig(void)
 		iGetSNType = m_hConfig.GetKeyIntValue("TestItem","Fetch Serial Number",0);
 		// DUT ip get automatically
 		iDutIpAuto = m_hConfig.GetKeyIntValue("TestItem","Fetch DUT IP Automatically",1);
+		// retry times
+		iRetryTimes= m_hConfig.GetKeyIntValue("TestItem","Retry Times",3);
 	}
 	else
 	{
@@ -1235,6 +1271,8 @@ BOOL CADBFormDlg::SaveConfig(void)
 	m_hConfig.SetKeyNumValue("TestItem","Fetch Serial Number",iGetSNType);
 	// DUT ip get automatically
 	m_hConfig.SetKeyNumValue("TestItem","Fetch DUT IP Automatically",iDutIpAuto);
+	// retry times
+	m_hConfig.SetKeyNumValue("TestItem","Retry Times",iRetryTimes);
 	
 	return TRUE;
 }
@@ -1364,6 +1402,10 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 {
 	//Sleep(1000);
 	// detect device
+	int LoopCnt = 0;
+
+LOOP_DETECT:
+	LoopCnt++;
 	hDetectDevice = CreateEvent(NULL, FALSE, FALSE, NULL);
 	UpdateLogInfo(-1,"["+GetCurTimeStr()+"] ");
 	DetectDevices();
@@ -1376,6 +1418,10 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 	}
 	if (dStartRet!=E_ADB_SUCCESS)
 	{
+		if (LoopCnt<iRetryTimes)
+		{
+			goto LOOP_DETECT;
+		}
 		// running status message show
 		UpdateTestStatus(STATUS_FAIL,dStartRet);
 		// enabled button
@@ -1455,6 +1501,9 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 	// Throughput Tx(Upload) test
 	if (m_ckThpTx)
 	{
+		LoopCnt = 0;
+LOOP_IPERF_TX:
+		LoopCnt++;
 		UpdateLogInfo(-1,"["+GetCurTimeStr()+"] ");
 		IperfTx();
 		Sleep(1);
@@ -1491,6 +1540,10 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 		Sleep(200);
 		if (dStartRet!=E_ADB_SUCCESS)
 		{
+			if (LoopCnt<iRetryTimes)
+			{
+              goto LOOP_IPERF_TX;
+			}
 			// running status message show
 			UpdateTestStatus(STATUS_FAIL,dStartRet);
 			// enabled button
@@ -1503,6 +1556,9 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 	// Throughput Rx(Download) test
 	if (m_ckThpRx)
 	{
+		LoopCnt = 0;
+LOOP_IPERF_RX:
+		LoopCnt++;
 		UpdateLogInfo(-1,"["+GetCurTimeStr()+"] ");
 		IperfDutRx();
 		Sleep(1);
@@ -1535,6 +1591,10 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 		Sleep(200);
 		if (dStartRet!=E_ADB_SUCCESS)
 		{
+			if (LoopCnt<iRetryTimes)
+			{
+				goto LOOP_IPERF_RX;
+			}
 			// running status message show
 			UpdateTestStatus(STATUS_FAIL,dStartRet);
 			// enabled button

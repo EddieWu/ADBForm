@@ -40,6 +40,7 @@
 //key word
 #define KEY_ADB_DEVICES       "List of devices attached"
 #define KEY_ADB_DEVICES_DUT   "device"
+#define KEY_ADB_D_NOTFOUND    "error: device not found"
 #define KEY_RSSI_RESULT       "Flags             SSID"
 #define KEY_WLAN_RUNSTATE     "ConnectedState"//"runState=Running"
 #define KEY_WLAN_IPADDR       "LinkAddresses:"//"ipaddr"
@@ -78,6 +79,7 @@ typedef enum
 	THREAD_GPS_INSTALL,
 	THREAD_GPS_START,
 	THREAD_GPS_STOP,
+	THREAD_ADB_SERVER,
 	
 	UNKOWN_TYPE = 255
 }E_THREAD_TYPE;
@@ -213,6 +215,7 @@ public:
 	void      SetProgressPos(int CurrPos,int MaxPos=MAX_PROGRESS_LEN);
 	char      PWD[MAX_PATH];
 	DWORD     DetectDevices(void);
+	DWORD     ActionADBServer(void);
 	void      UpdateLogInfo(DWORD retcode,CString loginfo);
 	DWORD     WLANInfo(void);
 	CString   UnDoStrBuff;
@@ -288,4 +291,6 @@ public:
 	int       iGetSNType;
 	// DUT ip get automatically
 	int       iDutIpAuto;
+	// retry times
+	int       iRetryTimes;
 };
