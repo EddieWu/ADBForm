@@ -70,14 +70,14 @@ DWORD   CPipeRun::UpdateOutStr(char oStr[])
 	//等待进程执行完毕 
 	//WaitForSingleObject(pi.hProcess, INFINITE);
 
-	char buffer[40960] = {0};
+	char buffer[80000] = {0};
 	//CString strOutput;
 	DWORD bytesRead;
 	bReadFlag = true;
 
 	try
 	{
-		if (ReadFile(hPipeRead,buffer,40959,&bytesRead,NULL) == NULL)  //读取管道
+		if (ReadFile(hPipeRead,buffer,80000,&bytesRead,NULL) == NULL)  //读取管道
 		{
 			bReadFlag = false;
 			return E_READ_INFO_ERR;
@@ -85,7 +85,7 @@ DWORD   CPipeRun::UpdateOutStr(char oStr[])
 		else
 		{
 			strOutput += buffer;
-			strncpy_s(oStr,40959,buffer,strlen(buffer));
+			strncpy_s(oStr,80000,buffer,strlen(buffer));
 			Sleep(1);
 			return E_READ_INFO_CONTINUE;
 		}

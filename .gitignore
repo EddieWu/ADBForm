@@ -18,9 +18,15 @@ MoreADB/
 *.aps
 *.ncb
 *.opt
+*.png
+*.rar
 icon/
 ADBForm/debug/
 ADBForm/release/
 ADBForm/ADBForm/Debug/
 ADBForm/ADBForm/Release/
+ADBForm_*/
+cisco_AP/
+conductive_BTWLANGPS/
+DELL_PC/
 

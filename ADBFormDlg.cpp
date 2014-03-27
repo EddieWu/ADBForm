@@ -406,7 +406,7 @@ DWORD CADBFormDlg::LogInfoShow(LPVOID lpParam)
 
 DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 {
-	char str[80000+1] = {0};
+	char str[40960] = {0};
 	//CString MSG_Buffer = "";
 	//SetDlgItemText(IDC_EDIT_MSGSHOW,"TEST...");
 	//GetDlgItemText(IDC_EDIT_MSGSHOW,MSG_Buffer);
@@ -434,13 +434,6 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 	*/
 	UnDoStrBuff = "";
 	//RunUIChange(true);
-#ifdef _DEBUG__
-	CFile DebugLog;
-	DebugLog.Open("c:\\GpsTest.txt",CFile::modeCreate|CFile::modeReadWrite,NULL);
-	DebugLog.SeekToEnd();
-	int i_index = 10001;
-	CString StrBuff = "";
-#endif
 	while(E_READ_INFO_ERR != RunObj->UpdateOutStr(str))
 	{
 		//MSG_Buffer.AppendFormat("%s",str);
@@ -453,17 +446,8 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 		UnDoStrBuff.AppendFormat("%s",str);
 		IPERFStr.Format("%s",str);
 		GPSTestStr.AppendFormat("%s",str);
-#ifdef _DEBUG__
-		StrBuff.Format("[%d] %s\r\n\r\n",i_index,str);
-		DebugLog.Write(StrBuff,StrBuff.GetLength());
-		i_index++;
-#endif
 		if (TestFlag==THREAD_GPS_RX && GPSStrValid())
 		{
-#ifdef _DEBUG__
-		StrBuff.Format("!!!TURE!!!\r\n");
-		DebugLog.Write(StrBuff,StrBuff.GetLength());
-#endif
 			//AfxMessageBox(GPSTestStr);
 			dStartRet = AnalyseStr(0,TestFlag);
 			if (dStartRet == E_ADB_SUCCESS)//|| dStartRet == E_ADB_GPS_CNLESS)
@@ -504,10 +488,6 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 		}
 		*/
 	}
-#ifdef _DEBUG__
-	//StrBuff.Format("!!!TURE!!!\r\n");
-	DebugLog.Close();
-#endif
 	/*
 	if (TestFlag==THREAD_IPERF_RX)
 	{
@@ -567,12 +547,9 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 	{
 		SetEvent(hTHPRxTest);
 	}
-	//if (RunObj!=NULL)
-	//{
-		RunObj->Close();
-		delete RunObj;
-		RunObj = NULL;
-	//}
+	RunObj->Close();
+	delete RunObj;
+	RunObj = NULL;
 	//RunUIChange(false);
 	CloseHandle(hGetInfoHandle);
 	//detect device done
@@ -684,9 +661,9 @@ void CADBFormDlg::UpdateLogInfo(DWORD retcode,CString loginfo)
 			hLogFile.Close();
 			bLogFileNormal = FALSE;
 		}
-		WriteLiteLog();  //bug fixed
 		if (bLogFileNormalLite)
 		{
+			WriteLiteLog123();
 			hLogFileLite.Close();
 			bLogFileNormalLite = FALSE;
 		}
@@ -869,9 +846,6 @@ DWORD CADBFormDlg::AnalyseDevices(void)
 		{
 			LogFileUpdate(TestSN,1);
 		}
-		// 20140324 WuJian modify Start
-		m_LiteTestSN = TestSN;
-		// 20140324 WuJian modify End
 	}
 	//AfxMessageBox("Detect OK!");
 	return E_ADB_SUCCESS;
@@ -986,12 +960,6 @@ DWORD CADBFormDlg::AnalyseGPS(void)
 	}
 	TestBuff = TestBuff.Mid(iPos+17);
 
-#if 0//_DEBUG__
-	CString StrBuff = "";
-	//CFile DebugLog;
-	StrBuff.Format("{%s}\r\n",TestBuff);
-	DebugLog.Write(StrBuff,StrBuff.GetLength());
-#endif
 	//satellite count
 	char    cSateNum[3] = {0};
 	int     iSateNum    = 0;
@@ -999,7 +967,7 @@ DWORD CADBFormDlg::AnalyseGPS(void)
 	float   fSateCN[10] = {0};
 	int     i           = 0;
 	CString CNKeyWord   = "";
-	while (TestBuff.GetLength()>/*55*/30)
+	while (TestBuff.GetLength()>55)
 	{
 		if (i==0)
 		{
@@ -1015,10 +983,6 @@ DWORD CADBFormDlg::AnalyseGPS(void)
 		}
 		CNKeyWord.Format("gps%d",i);
 		iPos = TestBuff.Find(CNKeyWord);
-#if 0//_DEBUG__
-		StrBuff.Format("KEY:[%s]|POS:[%d]\r\n",CNKeyWord,iPos);
-		DebugLog.Write(StrBuff,StrBuff.GetLength());
-#endif
 		if (iPos==-1)
 		{
 			return E_ADB_GPS_FORMAT;
@@ -1026,26 +990,15 @@ DWORD CADBFormDlg::AnalyseGPS(void)
 		TestBuff = TestBuff.Mid(iPos);
 		sprintf_s(cSateCN,"%s",TestBuff.Mid(10,5));
 		fSateCN[i]  = atof(cSateCN);
-#if 0//_DEBUG__
-		//CString StrBuff = "";
-		StrBuff.Format("[%d]-[%f]\r\n",i,fSateCN[i]);
-		DebugLog.Write(StrBuff,StrBuff.GetLength());
-#endif
-		// 20140324 WuJian modify Start
-		if (i_LiteTestGPSCN<fSateCN[i])
-		{
-			i_LiteTestGPSCN = fSateCN[i];
-		}
-		// 20140324 WuJian modify End
 		if (fSateCN[i] >= iGPSCNSpec)
 		{
 			//CNless = true;
 			// 20140324 WuJian modify Start
-			//i_LiteTestGPSCN = fSateCN[i];
+			i_LiteTestGPSCN = fSateCN[i];
 			// 20140324 WuJian modify End
 			return E_ADB_SUCCESS;
 		}
-		TestBuff = TestBuff.Mid(iPos+/*12*/3);
+		TestBuff = TestBuff.Mid(iPos+12);
 		i++;
 	}
 	//if (CNless)
@@ -1058,14 +1011,23 @@ DWORD CADBFormDlg::AnalyseGPS(void)
 // check GPS str is valid
 /*
 01-11 08:11:04.261 I/ACERGPS ( 2626): GPS_EVENT_SATELLITE_STATUS
+
 01-11 08:11:04.261 I/ACERGPS ( 2626): satelliteCount = 3
+
 01-11 08:11:04.261 I/ACERGPS ( 2626): gps0 C/N: 33.0
+
 01-11 08:11:04.261 I/ACERGPS ( 2626): gps1 C/N: 33.0
+
 01-11 08:11:04.261 I/ACERGPS ( 2626): gps2 C/N: 34.0
+
 01-11 08:11:05.261 I/ACERGPS ( 2626): GPS_EVENT_SATELLITE_STATUS
+
 01-11 08:11:05.261 I/ACERGPS ( 2626): satelliteCount = 3
+
 01-11 08:11:05.261 I/ACERGPS ( 2626): gps0 C/N: 35.0
+
 01-11 08:11:05.261 I/ACERGPS ( 2626): gps1 C/N: 34.0
+
 01-11 08:11:05.262 I/ACERGPS ( 2626): gps2 C/N: 34.0
 */
 BOOL CADBFormDlg::GPSStrValid(void)
@@ -1216,7 +1178,7 @@ DWORD CADBFormDlg::NoLogInfoDo(LPVOID lpParam)
 
 DWORD CADBFormDlg::NoLogInfoDoFunc(WPARAM wPamam, LPARAM lParam)
 {
-	char str[80000+1] = {0};
+	char str[40960] = {0};
 	CString DutStr = "DEVICE LOG START[\r\n";
 	//UnDoStrBuff = "";
 	//RunUIChange(true);
@@ -1301,12 +1263,9 @@ DWORD CADBFormDlg::NoLogInfoDoFunc(WPARAM wPamam, LPARAM lParam)
 		DevRunObj->DestroyProcess();
 	}
 	//end of thread
-	//if (DevRunObj!=NULL)
-	//{
-		DevRunObj->Close();
-		delete DevRunObj;
-		DevRunObj = NULL;
-	//}
+	DevRunObj->Close();
+	delete DevRunObj;
+	DevRunObj = NULL;
 	//RunUIChange(false);
 	CloseHandle(hNoInfoHandle);
 	return 0;
@@ -1599,20 +1558,6 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 	//Sleep(1000);
 	// detect device
 	int LoopCnt = 0;
-	// 20140326 WuJian modify Start
-	// Second test bug fixed
-	// init
-	UnDoStrBuff = "";
-	GPSTestStr  = "";
-	m_LiteTestSN   = "";
-	i_LiteTestRSSI = 0;
-	i_LiteTestThpT = 0;
-	i_LiteTestThpR = 0;
-	i_LiteTestGPSCount = 0;
-	i_LiteTestGPSCN = 0.0f;
-	TestFlag  = UNKOWN_TYPE;
-    TestFlag2 = UNKOWN_TYPE;
-	// 20140326 WuJian modify End
 
 LOOP_DETECT:
 	LoopCnt++;
@@ -1674,17 +1619,6 @@ LOOP_DETECT:
 		//20140226 Wujian add End
 		if (dStartRet!=E_ADB_SUCCESS)
 		{
-#if 1
-			if (i_LiteTestGPSCN > 0.0 && dStartRet==E_ADB_ERROR)
-			{
-				if (i_LiteTestGPSCN < iGPSCNSpec)
-				{
-					// running status message show
-					//UpdateTestStatus(STATUS_FAIL,E_ADB_GPS_CNLESS);
-					dStartRet = E_ADB_GPS_CNLESS;
-				}
-			}
-#endif
 			// running status message show
 			UpdateTestStatus(STATUS_FAIL,dStartRet);
 			// enabled button
@@ -2008,93 +1942,96 @@ BOOL CADBFormDlg::FileRen(CFile *oriFile,CString newName)
 	return TRUE;
 }
 
-BOOL CADBFormDlg::WriteLiteLog(void)
+
+
+
+
+
+
+
+
+
+
+
+
+BOOL CADBFormDlg::WriteLiteLog123(void)
 {
-	if (!bLogFileNormalLite)
-	{
-		bLogFileNormalLite = hLogFileLite.Open(m_sLogFilePathLiteFull,CFile::modeWrite);
-	}
-	if(!bLogFileNormalLite)
-	{
-		AfxMessageBox("Create log(LITE) file failure again!");
-		return FALSE;
-	}
-	else
-	{
-		hLogFileLite.SeekToEnd();
-		m_LogLiteStr = "";
-	}
+	int a=1;
+	int b=2;
+	AfxMessageBox("Tezt");
+
+	
 	if (m_LiteTestSN.GetLength()<10)
 	{
-		return FALSE;
+	return FALSE;
 	}
 	m_LogLiteStr.Format("%s,%s,",GetCurTimeStr(1),m_LiteTestSN);
 	// RSSI
 	if (m_ckRSSI)
 	{
-		if (0 == i_LiteTestRSSI)
-		{
-		m_LogLiteStr.AppendFormat("%s,","NoN");
-		}
-		else
-		{
-		m_LogLiteStr.AppendFormat("%d,",i_LiteTestRSSI);
-		}
+	if (0 == i_LiteTestRSSI)
+	{
+	m_LogLiteStr.AppendFormat("%s,","NoN");
 	}
 	else
 	{
-		m_LogLiteStr.AppendFormat("%s,","NoT");
+	m_LogLiteStr.AppendFormat("%d,",i_LiteTestRSSI);
+	}
+	}
+	else
+	{
+	m_LogLiteStr.AppendFormat("%s,","NoT");
 	}
 
 	// GPS
 	if (m_ckGPS)
 	{
-		if (0 == i_LiteTestGPSCount)
-		{
-		m_LogLiteStr.AppendFormat("%s,","NoN");
-		}
-		else
-		{
-		m_LogLiteStr.AppendFormat("%d,%.1f,",i_LiteTestGPSCount,i_LiteTestGPSCN);
-		}
+	if (0 == i_LiteTestGPSCount)
+	{
+	m_LogLiteStr.AppendFormat("%s,","NoN");
 	}
 	else
 	{
-		m_LogLiteStr.AppendFormat("%s,","NoT");
+	m_LogLiteStr.AppendFormat("%d,%.1f,",i_LiteTestGPSCount,i_LiteTestGPSCN);
+	}
+	}
+	else
+	{
+	m_LogLiteStr.AppendFormat("%s,","NoT");
 	}
 
 	// ThroughPut Tx
 	if (m_ckThpTx)
 	{
-		if (0 == i_LiteTestThpT)
-		{
-		m_LogLiteStr.AppendFormat("%s,","NoN");
-		}
-		else
-		{
-		m_LogLiteStr.AppendFormat("%d,",i_LiteTestThpT);
-		}
+	if (0 == i_LiteTestThpT)
+	{
+	m_LogLiteStr.AppendFormat("%s,","NoN");
 	}
 	else
 	{
-		m_LogLiteStr.AppendFormat("%s,","NoT");
+	m_LogLiteStr.AppendFormat("%d,",i_LiteTestThpT);
+	}
+	}
+	else
+	{
+	m_LogLiteStr.AppendFormat("%s,","NoT");
 	}
 
 	// ThroughPut Rx
 	if (m_ckThpRx)
 	{
-		if (0 == i_LiteTestThpR)
-		{
-		m_LogLiteStr.AppendFormat("%s","NoN");
-		}
-		else
-		{
-		m_LogLiteStr.AppendFormat("%d",i_LiteTestThpR);
-		}
+	if (0 == i_LiteTestThpR)
+	{
+	m_LogLiteStr.AppendFormat("%s","NoN");
 	}
 	else
 	{
-		m_LogLiteStr.AppendFormat("%s","NoT");
+	m_LogLiteStr.AppendFormat("%d",i_LiteTestThpR);
+	}
+	}
+	else
+	{
+	m_LogLiteStr.AppendFormat("%s","NoT");
 	}
 
 	m_LogLiteStr.AppendFormat("%s","\r\n");

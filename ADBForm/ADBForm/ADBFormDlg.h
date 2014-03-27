@@ -8,14 +8,27 @@
 #include "ColorStatic.h"
 #include "BtnST.h"
 #include "afxcmn.h"
+#include "shlwapi.h"
 
+//#define _DEBUG__
 #define TEST_COMMAND       ("F:\\BenKyoU\\CloudWu\\CCPP\\CCpp\\Debug\\CCpp.exe")
 #define CMD_ADB_DEVICES    ("\\adb\\adb devices")
+#define CMD_ADB_GETSN      ("\\adb\\adb shell getprop gsm.serial")
 #define CMD_ADB_SHELL      ("\\adb\\adb shell")
 #define CMD_ADB_SHELL_WLAN ("\\adb\\adb shell dumpsys wifi")
 #define CMD_ADB_SHELL_GPS  ("\\adb\\adb shell am broadcast -a ACERSTARTGPSTEST")
-#define CMD_ADB_GPS_FETCH  ("\\adb\\adb logcat -b main -v time -s ACERGPS")
+//20140226 Wujian add Start
+// 打开手机端应用
+// adb shell am start -n com.huaqin.acergpsandwifitest/.MainActivity
+// 关闭手机端应用
+// adb shell am force-stop com.huaqin.acergpsandwifitest
+#define CMD_ADB_SHELL_INSTALL  ("\\adb\\adb install -r AcerGpsAndWifiTest.apk")
+#define CMD_ADB_SHELL_GPSST    ("\\adb\\adb shell am start -n com.huaqin.acergpsandwifitest/.MainActivity")
+#define CMD_ADB_SHELL_GPSED    ("\\adb\\adb shell am force-stop com.huaqin.acergpsandwifitest")
+//20140226 Wujian add End
+#define CMD_ADB_GPS_FETCH      ("\\adb\\adb logcat -b main -v time -s ACERGPS")
 //#define CMD_ADB_GPS_FETCH  ("\\adb\\adb logcat -b main -v time")
+#define CMD_ADB_SHELL_UNINSTALL  ("\\adb\\adb uninstall AcerGpsAndWifiTest.apk")
 
 //throughput test
 //Tx test
@@ -30,7 +43,11 @@
 //key word
 #define KEY_ADB_DEVICES       "List of devices attached"
 #define KEY_ADB_DEVICES_DUT   "device"
+#define KEY_ADB_D_NOTFOUND    "error: device not found"
 #define KEY_RSSI_RESULT       "Flags             SSID"
+#define KEY_WLAN_RUNSTATE     "ConnectedState"//"runState=Running"
+#define KEY_WLAN_IPADDR       "LinkAddresses:"//"ipaddr"
+#define KEY_WLAN_GATEWAY      "Routes:"//"gateway"
 #define KEY_ENTER             "\r\n"
 #define KEY_IPADDR            "ipaddr"
 #define KEY_GATEWAY           "gateway"
@@ -62,6 +79,10 @@ typedef enum
 	THREAD_IPERF_DUT_TX,
 	THREAD_IPERF_DUT_RX,
 	THREAD_GPS_RX,
+	THREAD_GPS_INSTALL,
+	THREAD_GPS_START,
+	THREAD_GPS_STOP,
+	THREAD_ADB_SERVER,
 	
 	UNKOWN_TYPE = 255
 }E_THREAD_TYPE;
@@ -84,6 +105,9 @@ typedef enum
 	E_ADB_DETECT_ERR,
 	E_ADB_NODUT,
 	E_ADB_MULTIDEVICES,
+	E_ADB_BADSN,
+	E_ADB_RSSI_STOP,
+	E_ADB_RSSI_BADIPADDR,
 	E_ADB_RSSI_ERR,
 	E_ADB_RSSI_NULL,
 	E_ADB_RSSI_LESS,
@@ -171,12 +195,27 @@ public:
 	CString   m_sLogFilePath;
 	CString   m_sLogFilePathFull;
 	CFile     hLogFile;
+	// 20140324 WuJian add Start
+	CFile     hLogFileLite;
+	CString   m_sLogFilePathLiteFull;
+	CString   m_LogLiteStr;
+	CString   m_LiteTestSN;
+	int       i_LiteTestRSSI;
+	int       i_LiteTestGPSCount;
+	float     i_LiteTestGPSCN;
+	int       i_LiteTestThpT;
+	int       i_LiteTestThpR;
+	BOOL      WriteLiteLog(void);
+	BOOL      bLogFileNormalLite;
+	// 20140324 WuJian add End
 	BOOL      bLogFileNormal;
 	BOOL      FileRen(CFile *oriFile,CString newName);
 	//detect device action handle
 	HANDLE    hDetectDevice;
 	// GPS action handle
 	HANDLE    hGPSTest;
+	HANDLE    hGPSAPKAction;
+	HANDLE    hGPSInstall;
 	// RSSI test
 	HANDLE    hRSSITest;
 	// Throughput Tx(Upload) test
@@ -192,15 +231,18 @@ public:
 	void      SetProgressPos(int CurrPos,int MaxPos=MAX_PROGRESS_LEN);
 	char      PWD[MAX_PATH];
 	DWORD     DetectDevices(void);
+	DWORD     ActionADBServer(void);
 	void      UpdateLogInfo(DWORD retcode,CString loginfo);
 	DWORD     WLANInfo(void);
 	CString   UnDoStrBuff;
+	CString   GPSTestStr;
 	E_THREAD_TYPE     TestFlag;
 	E_THREAD_TYPE     TestFlag2;
 	DWORD     AnalyseStr(double dSpec,E_THREAD_TYPE type,CString KeyStr="");
 	DWORD     AnalyseDevices(void);
 	DWORD     AnalyseRSSI(void);
 	DWORD     AnalyseGPS(void);
+	BOOL      GPSStrValid(void);
 	DWORD     AnalyseTHPTx(CString ResultStr);
 	DWORD     AnalyseTHPRx(CString ResultStr);
 	DWORD     SearchRSSIArrary(int RSSIArr[],CString mStr);	
@@ -216,8 +258,15 @@ public:
 	BOOL      ConfigIsReady(void);
 	void      SetWindowSize(E_WND_SIZE sType);
 	DWORD     GPSRx(void);
+	//20140226 Wujian add Start
+    DWORD     HQGPSAction(int actiontype=0);
+	//20140226 Wujian add End
 	CString   GetCurTimeStr(int iType=1);
 	void      LogFileUpdate(CString loginfo,int iFlag=0);
+	//20140324 Wujian modify Start
+	BOOL      LogPrepare(void);
+	BOOL      bLogPre;
+	//20140324 Wujian modify End
 public:
 	// PC ip address
 	CString cPCIPaddr;
@@ -254,10 +303,19 @@ public:
 
 	//SPEC
 	int       iGPSCNSpec;
+	int       iGPSSatCnt;
 	int       iRSSISpec;
 	int       iThpTxSpec;
 	int       iThpRxSpec;
 	//throughput test config
 	int       iTransmitTime;
 	int       iIntervalTime;
+	// SN command type
+	int       iGetSNType;
+	// DUT ip get automatically
+	int       iDutIpAuto;
+	// retry times
+	int       iRetryTimes;
+public:
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 };
