@@ -236,6 +236,7 @@ public:
 	DWORD     WLANInfo(void);
 	CString   UnDoStrBuff;
 	CString   GPSTestStr;
+	BOOL      ApkOK;
 	E_THREAD_TYPE     TestFlag;
 	E_THREAD_TYPE     TestFlag2;
 	DWORD     AnalyseStr(double dSpec,E_THREAD_TYPE type,CString KeyStr="");
@@ -318,4 +319,7 @@ public:
 	int       iRetryTimes;
 public:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	CFile DebugLog;
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	int       GPSBugFixCnt;
 };

@@ -93,6 +93,7 @@ BEGIN_MESSAGE_MAP(CADBFormDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_START, &CADBFormDlg::OnBnClickedButtonStart)
 	ON_BN_CLICKED(IDC_BUTTON7, &CADBFormDlg::OnBnClickedButton7)
 	ON_WM_SIZE()
+	ON_WM_CREATE()
 END_MESSAGE_MAP()
 
 
@@ -140,6 +141,7 @@ BOOL CADBFormDlg::OnInitDialog()
 	ActionADBServer();
 	// log file crate
 	bLogPre = LogPrepare();
+	//DebugLog = NULL;
 	//debug
 	/*
 	CFont    m_font;
@@ -187,6 +189,9 @@ BOOL CADBFormDlg::OnInitDialog()
 	((CButton *)GetDlgItem(IDC_BUTTON_START))->GetWindowRect(&rect);
 	het = rect.Height();
 	wid = rect.Width();*/
+		//DebugLog.SetFilePath("c:\\");
+		//DebugLog.Open("c:\\TTest.txt",CFile::modeCreate|CFile::modeReadWrite,NULL);
+		//DebugLog.SeekToEnd();
 	return FALSE;
 	//return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -435,7 +440,8 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 	UnDoStrBuff = "";
 	//RunUIChange(true);
 #ifdef _DEBUG__
-	CFile DebugLog;
+	//CFile DebugLog;
+	DebugLog.SetFilePath("c:\\");
 	DebugLog.Open("c:\\GpsTest.txt",CFile::modeCreate|CFile::modeReadWrite,NULL);
 	DebugLog.SeekToEnd();
 	int i_index = 10001;
@@ -449,6 +455,10 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 		//Cot_msginfoshow
 		//m_EdtLog.SetSel(sTmp.GetLength(),sTmp.GetLength());
 		//UpdateWindow();
+		//if (TestFlag==THREAD_GPS_RX)
+		//{
+			//strcat(str,"===============================\r\n");
+		//}
 		UpdateLogInfo(-1,str);
 		UnDoStrBuff.AppendFormat("%s",str);
 		IPERFStr.Format("%s",str);
@@ -458,6 +468,7 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 		DebugLog.Write(StrBuff,StrBuff.GetLength());
 		i_index++;
 #endif
+		GPSBugFixCnt++;
 		if (TestFlag==THREAD_GPS_RX && GPSStrValid())
 		{
 #ifdef _DEBUG__
@@ -475,6 +486,10 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 			{
 				GPSTestStr = "";
 			}
+		}
+		if (GPSBugFixCnt>3)
+		{
+			GPSTestStr = "";
 		}
 		if(TestFlag==THREAD_IPERF_TX && IPERFStr.Find(IPERFSeaWord)!=-1)
 		{
@@ -505,7 +520,7 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 		*/
 	}
 #ifdef _DEBUG__
-	//StrBuff.Format("!!!TURE!!!\r\n");
+	StrBuff.Format("!!!TURE!!!\r\n");
 	DebugLog.Close();
 #endif
 	/*
@@ -567,12 +582,12 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 	{
 		SetEvent(hTHPRxTest);
 	}
-	//if (RunObj!=NULL)
-	//{
+	if (RunObj!=NULL)
+	{
 		RunObj->Close();
 		delete RunObj;
 		RunObj = NULL;
-	//}
+	}
 	//RunUIChange(false);
 	CloseHandle(hGetInfoHandle);
 	//detect device done
@@ -986,11 +1001,14 @@ DWORD CADBFormDlg::AnalyseGPS(void)
 	}
 	TestBuff = TestBuff.Mid(iPos+17);
 
-#if 0//_DEBUG__
+#ifdef _DEBUG__
 	CString StrBuff = "";
 	//CFile DebugLog;
 	StrBuff.Format("{%s}\r\n",TestBuff);
-	DebugLog.Write(StrBuff,StrBuff.GetLength());
+	if (DebugLog!=NULL)
+	{
+		DebugLog.Write(StrBuff,StrBuff.GetLength());
+	}
 #endif
 	//satellite count
 	char    cSateNum[3] = {0};
@@ -999,12 +1017,24 @@ DWORD CADBFormDlg::AnalyseGPS(void)
 	float   fSateCN[10] = {0};
 	int     i           = 0;
 	CString CNKeyWord   = "";
+	//CString DbgStr = "";
+	
 	while (TestBuff.GetLength()>/*55*/30)
 	{
+		// 20140331 Wujian modify Start
+		//if(i>3 && ApkOK)
+		//{
+			//return E_ADB_SUCCESS;
+		//}
+		// 20140331 Wujian modify End
 		if (i==0)
 		{
 			sprintf_s(cSateNum,"%s",TestBuff.Mid(0,2));
 			iSateNum = atoi(cSateNum);
+			//
+			//DbgStr.Format("[[[%d]]]\r\n",iSateNum);
+			//DebugLog.Write(DbgStr,DbgStr.GetLength());
+			//
 			if (iSateNum<iGPSSatCnt)
 			{
 				return E_ADB_GPS_SATLESS;
@@ -1015,7 +1045,8 @@ DWORD CADBFormDlg::AnalyseGPS(void)
 		}
 		CNKeyWord.Format("gps%d",i);
 		iPos = TestBuff.Find(CNKeyWord);
-#if 0//_DEBUG__
+#ifdef _DEBUG__
+		//StrBuff.Format("[[%s]]",TestBuff);
 		StrBuff.Format("KEY:[%s]|POS:[%d]\r\n",CNKeyWord,iPos);
 		DebugLog.Write(StrBuff,StrBuff.GetLength());
 #endif
@@ -1026,7 +1057,7 @@ DWORD CADBFormDlg::AnalyseGPS(void)
 		TestBuff = TestBuff.Mid(iPos);
 		sprintf_s(cSateCN,"%s",TestBuff.Mid(10,5));
 		fSateCN[i]  = atof(cSateCN);
-#if 0//_DEBUG__
+#ifdef _DEBUG__
 		//CString StrBuff = "";
 		StrBuff.Format("[%d]-[%f]\r\n",i,fSateCN[i]);
 		DebugLog.Write(StrBuff,StrBuff.GetLength());
@@ -1045,7 +1076,7 @@ DWORD CADBFormDlg::AnalyseGPS(void)
 			// 20140324 WuJian modify End
 			return E_ADB_SUCCESS;
 		}
-		TestBuff = TestBuff.Mid(iPos+/*12*/3);
+		TestBuff = TestBuff.Mid(iPos+/*12*/4);
 		i++;
 	}
 	//if (CNless)
@@ -1072,7 +1103,7 @@ BOOL CADBFormDlg::GPSStrValid(void)
 {
 	//GPSTestStr = "";
 	CString TestBuff = GPSTestStr;
-	if(TestBuff.GetLength()<56)
+	if(TestBuff.GetLength()<30/*56*/)
 	{
 		return FALSE;
 	}
@@ -1089,6 +1120,11 @@ BOOL CADBFormDlg::GPSStrValid(void)
 	CString CNKeyWord   = "";
 	sprintf_s(cSateNum,"%s",TestBuff.Mid(0,2));
 	iSateNum = atoi(cSateNum);
+
+	//CString DbgStr = "";
+	//DbgStr.Format("{{{%d}}}\r\n",iSateNum);
+	//DebugLog.Write(DbgStr,DbgStr.GetLength());
+
 	if (iSateNum<iGPSSatCnt)
 	{
 		return FALSE;
@@ -1098,6 +1134,12 @@ BOOL CADBFormDlg::GPSStrValid(void)
 		CNKeyWord.Format("gps%d",iSateNum-1);
 		//AfxMessageBox(CNKeyWord);
 		iPos = TestBuff.Find(CNKeyWord);
+		// 20140331 Wujian modify Start
+		if(-1!=TestBuff.Find("ok"))
+		{
+			ApkOK = TRUE;
+		}
+		// 20140331 Wujian modify End
 		if(iPos!=-1)
 		{
 			return TRUE;
@@ -1301,12 +1343,12 @@ DWORD CADBFormDlg::NoLogInfoDoFunc(WPARAM wPamam, LPARAM lParam)
 		DevRunObj->DestroyProcess();
 	}
 	//end of thread
-	//if (DevRunObj!=NULL)
-	//{
+	if (DevRunObj!=NULL)
+	{
 		DevRunObj->Close();
 		delete DevRunObj;
 		DevRunObj = NULL;
-	//}
+	}
 	//RunUIChange(false);
 	CloseHandle(hNoInfoHandle);
 	return 0;
@@ -1612,6 +1654,8 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 	i_LiteTestGPSCN = 0.0f;
 	TestFlag  = UNKOWN_TYPE;
     TestFlag2 = UNKOWN_TYPE;
+	ApkOK = FALSE;
+	GPSBugFixCnt = 0;
 	// 20140326 WuJian modify End
 
 LOOP_DETECT:
@@ -2108,3 +2152,14 @@ void CADBFormDlg::OnSize(UINT nType, int cx, int cy)
 	CDialog::OnSize(nType, cx, cy);
 }
 
+
+int CADBFormDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	::SetWindowPos(this->m_hWnd,HWND_TOPMOST,10,10,10,10,SWP_NOMOVE|SWP_NOSIZE);
+	if (CDialog::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	// TODO:  在此添加您专用的创建代码
+
+	return 0;
+}
