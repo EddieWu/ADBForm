@@ -13,7 +13,8 @@
 //#define _DEBUG__
 #define TEST_COMMAND       ("F:\\BenKyoU\\CloudWu\\CCPP\\CCpp\\Debug\\CCpp.exe")
 #define CMD_ADB_DEVICES    ("\\adb\\adb devices")
-#define CMD_ADB_GETSN      ("\\adb\\adb shell getprop gsm.serial")
+//#define CMD_ADB_GETSN      ("\\adb\\adb shell getprop gsm.serial")
+#define CMD_ADB_GETSN      ("\\adb\\adb shell getprop ro.ril.sn.id")
 #define CMD_ADB_SHELL      ("\\adb\\adb shell")
 #define CMD_ADB_SHELL_WLAN ("\\adb\\adb shell dumpsys wifi")
 #define CMD_ADB_SHELL_GPS  ("\\adb\\adb shell am broadcast -a ACERSTARTGPSTEST")

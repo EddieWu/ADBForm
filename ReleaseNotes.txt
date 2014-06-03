@@ -1,0 +1,19 @@
+v1.0_140228
+1) First standard version
+
+v1.1_140302
+1) UI modify for HB PC DPI
+2) Fix ADB server bug(log file invalid)
+3) Fix connect device directory too long bug(MAX_PATH replace)
+4) Fix get serial number no devices bug
+5) Add retry loop test(C plus plus goto key word)
+
+v1.2_140325
+1) Log system enhanced(csv,date folder)
+2) GPS infomation analyse bug fixed
+3) Debug bug fixed(coding difference)
+4) Satellite count add
+
+v1.2_140603
+1) Change get serial number command(adb shell getprop gsm.serial->ro.ril.sn.id)
+2) Github fixed
