@@ -18,8 +18,8 @@ MoreADB/
 *.aps
 *.ncb
 *.opt
-*.png
 *.rar
+*.png
 icon/
 ADBForm/debug/
 ADBForm/release/
@@ -29,4 +29,5 @@ ADBForm_*/
 cisco_AP/
 conductive_BTWLANGPS/
 DELL_PC/
-
+ADBForm_bak140228
+20140603_ADBForm/

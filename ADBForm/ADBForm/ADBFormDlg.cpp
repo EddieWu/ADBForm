@@ -661,11 +661,13 @@ DWORD CADBFormDlg::ActionADBServer(void)
 {
 	TestFlag = THREAD_ADB_SERVER;
 	char DetectCMD[MAX_PATH] = {0};
-	sprintf_s(DetectCMD,"%s%s",PWD,CMD_ADB_DEVICES);
+    sprintf_s(DetectCMD,"%s%s",PWD,CMD_ADB_DEVICES);
 
 	RunObj = new CPipeRun(DetectCMD,true);
 	RunObj->PreparePipe();
 	RunObj->RunProgress();
+
+
 
 	hGetInfoHandle = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)LogInfoShow,this,NULL,&dGetInfoHandleID);
 
@@ -932,7 +934,7 @@ DWORD CADBFormDlg::AnalyseRSSI(void)
 		}	
 		/*
 		SSID: HWTEST, BSSID: 8c:21:0a:42:5c:1a, MAC: 00:08:22:0a:b4:fb, Supplicant state: COMPLETED, RSSI: -27, Link speed: 54, Net ID: 0
-		ipaddr 192.168.25.101 gateway 192.168.25.1 netmask 255.255.255.0 dns1 192.168.25.1 dns2 8.8.8.8 DHCP server 192.168.25.1 lease 7200 seconds
+        ipaddr 192.168.25.101 gateway 192.168.25.1 netmask 255.255.255.0 dns1 192.168.25.1 dns2 8.8.8.8 DHCP server 192.168.25.1 lease 7200 seconds
 		*/
 		// SSID check
 		// RSSI check
@@ -1442,7 +1444,7 @@ BOOL CADBFormDlg::LoadDefaultConfig(void)
 		iTransmitTime
 			= m_hConfig.GetKeyIntValue("TestItem","IPERF Test Time",30);
 		iIntervalTime
-			= m_hConfig.GetKeyIntValue("TestItem","IPERF Report Interval Time",1);
+				   = m_hConfig.GetKeyIntValue("TestItem","IPERF Report Interval Time",1);
 		// SN command type
 		iGetSNType = m_hConfig.GetKeyIntValue("TestItem","Fetch Serial Number",0);
 		// DUT ip get automatically
@@ -1512,6 +1514,7 @@ BOOL CADBFormDlg::SaveConfig(void)
 	// retry times
 	m_hConfig.SetKeyNumValue("TestItem","Retry Times",iRetryTimes);
 
+	
 	return TRUE;
 }
 
@@ -1809,7 +1812,7 @@ LOOP_IPERF_TX:
 			if (LoopCnt<iRetryTimes)
 			{
 				Sleep(500);
-				goto LOOP_IPERF_TX;
+              goto LOOP_IPERF_TX;
 			}
 			// running status message show
 			UpdateTestStatus(STATUS_FAIL,dStartRet);
@@ -1908,6 +1911,7 @@ DWORD CADBFormDlg::HQGPSAction(int actiontype)
 #if 1
 		hGPSInstall = CreateEvent(NULL,FALSE,FALSE,NULL);
 
+		
 		TestFlag2 = THREAD_GPS_INSTALL;
 		sprintf_s(GpsActionCMD,"%s%s",PWD,CMD_ADB_SHELL_INSTALL);
 		UpdateLogInfo(-1,"GPS APK INSTALL:\r\n");
