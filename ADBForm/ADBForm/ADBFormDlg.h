@@ -13,8 +13,8 @@
 //#define _DEBUG__
 #define TEST_COMMAND       ("F:\\BenKyoU\\CloudWu\\CCPP\\CCpp\\Debug\\CCpp.exe")
 #define CMD_ADB_DEVICES    ("\\adb\\adb devices")
-//#define CMD_ADB_GETSN      ("\\adb\\adb shell getprop gsm.serial")
-#define CMD_ADB_GETSN      ("\\adb\\adb shell getprop ro.ril.sn.id")
+#define CMD_ADB_GETSN      ("\\adb\\adb shell getprop gsm.serial")
+//#define CMD_ADB_GETSN      ("\\adb\\adb shell getprop ro.ril.sn.id")
 #define CMD_ADB_SHELL      ("\\adb\\adb shell")
 #define CMD_ADB_SHELL_WLAN ("\\adb\\adb shell dumpsys wifi")
 #define CMD_ADB_SHELL_GPS  ("\\adb\\adb shell am broadcast -a ACERSTARTGPSTEST")
@@ -41,6 +41,14 @@
 //#define CMD_PC_IPERF_RX    ("\\bin\\iperf.exe -c DUTIP -P 1 -i 1 -p 5001 -C -f k -t 30 -T 1")
 #define CMD_PC_IPERF_RX    ("\\bin\\iperf.exe -c DUTIP -P 1 -i 1 -p 5001 -C -f k -t ")
 
+//20140807 Wujian modify Start
+#define CMD_ADB_PULL_PCBAMMILOG ("\\adb\\adb pull /storage/sdcard0/PCBA_MMI_TestResult.txt")
+#define CMD_ADB_PULL_FULLMMILOG ("\\adb\\adb pull /storage/sdcard0/Full_MMI_TestResult.txt")
+#define CMD_ADB_MMI_LOG_TEMP    ("\\MMItemp")
+#define CMD_ADB_MMI_LOG_TAR     ("\\target")
+#define CMD_ADB_MMI_LOG_BMMI    ("\\B-MMI")
+#define CMD_ADB_MMI_LOG_SMMI    ("\\S-MMI")
+//20140807 Wujian modify End
 //key word
 #define KEY_ADB_DEVICES       "List of devices attached"
 #define KEY_ADB_DEVICES_DUT   "device"
@@ -84,6 +92,9 @@ typedef enum
 	THREAD_GPS_START,
 	THREAD_GPS_STOP,
 	THREAD_ADB_SERVER,
+	//
+	THREAD_PULL_LOGP,
+	THREAD_PULL_LOGF,
 	
 	UNKOWN_TYPE = 255
 }E_THREAD_TYPE;
@@ -119,7 +130,21 @@ typedef enum
 	E_ADB_THPTX_ERR,
 	E_ADB_THPTX_LESS,
 	E_ADB_THPRX_ERR,
-	E_ADB_THPRX_LESS
+	E_ADB_THPRX_LESS,
+    ERR_LENGTH_INVALID,
+	E_ADB_PULL_LOG_PCBA,
+	E_ADB_PULL_LOG_FULL,
+	E_PCBA_MMI_LOG_INVALID,
+	E_FULL_MMI_LOG_INVALID,
+	E_CREATE_BMMI_FLODER_FAIL,
+	E_CREATE_BMMI_DATEF_FAIL,
+	E_CREATE_BMMI_PCF_FAIL,
+	E_CREATE_BMMI_FILE_FAIL,
+	E_CREATE_SMMI_FLODER_FAIL,
+	E_CREATE_SMMI_DATEF_FAIL,
+	E_CREATE_SMMI_FILE_FAIL,
+
+
 
 }E_ADBFORM_RETURN;
 //ERRCODE
@@ -136,6 +161,12 @@ typedef enum
 #define FROM_NOR_HEIGHT  0x00000171
 #define FROM_COF_HEIGHT  0x00000220
 #define FROM_DBG_HEIGHT  0x000001a6
+
+#define _HQ_ONLY_FOR_ASUS_
+
+#define MAX_STATION_NUM         (6)
+#define MAX_STATION_VALUE_LEN   (100)
+//#define _HQ_ONLY_FOR_ACER_
 // CADBFormDlg ¶Ô»°¿ò
 class CADBFormDlg : public CDialog
 {
@@ -224,6 +255,22 @@ public:
 	// Throughput Rx(Download) test
 	HANDLE    hTHPRxTest;
 
+    // 20140807 Wujian modify Start
+	// MMI LOG fetch
+	HANDLE    hMMILogPull;
+	HANDLE    hMMILogPullHandle;
+    DWORD     PullPCBAMMILog(void);
+    DWORD     PullFULLMMILog(void);
+	static DWORD     PullLogInfoShow(LPVOID lpParam);
+	DWORD     PullLogInfoShowFunc(WPARAM wPamam, LPARAM lParam);
+	CString   ReadMMILogFile(int filetype,char **pRetStr);
+	int       ReadMMILogLine(char *dst,char *value,int &gapsize);
+	int       AsusLogPrepare(int BorS);
+	CFile     AsusLogFile;
+	CString   AsusMMIItemList(char *ItemLog);
+	float     AsusMMITestTimeTotal;
+	int       StrSplit(const char *src,char ValArr[/*MAX_STATION_NUM*/][MAX_STATION_VALUE_LEN]);
+    // 20140807 Wujian modify End
 	HANDLE    hNoInfoHandle;
 	DWORD     dNoInfoHandleID;
 	HANDLE    hNoLogThread;
@@ -318,9 +365,19 @@ public:
 	int       iDutIpAuto;
 	// retry times
 	int       iRetryTimes;
+	// 20140819 Wujian modify Start
+	CString   sASUSLogPath;
+	// 20140819 Wujian modify End
 public:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	CFile DebugLog;
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	int       GPSBugFixCnt;
+	//DWORD     MCodeOct2Hex(const char *srcCodeOct,char *destCodeHex);
+public:
+	// some important message show
+	CEdit CntMsgShowIt;
+	// MMI Test Result
+	CString sEndTest;
+	BOOL    bMMITestResult;
 };

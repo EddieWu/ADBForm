@@ -1,0 +1,19 @@
+[MMI Test Result]
+2010-01-02 05:24:57
+Touch_Test,0,Pass,10.297,,
+LCD_Test,0,Pass,7.296,red/green/blue/white/black,
+BackLight_Test,0,Pass,1.697,,
+Receiver1_Test,0,Pass,1.742,,
+Speaker_Test,0,Pass,1.654,,
+Keypad_Test,0,Pass,5.562,,
+Board MIC_Test,0,Pass,16.937,,
+Board MIC2_Test,0,Pass,11.702,,
+Headset_Test,0,Pass,8.09,,
+FM_Test,0,Pass,6.176,104.3/87.9/98.0/108.0MHz,
+MotionSensor_Test,0,Pass,13.723,,left/buttom
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.002,,SN:WJTEST20140807
+SDcard_Test,1916,fail ! ,0.007,,external SD size:nullMB
+SIMcard_Test,1915,fail:IMSI is unavailable ! ,0.008,,IMSI:null
+WiFi_Test,0,Pass,27.522,3,3 hotspot(s) detected
+GPS_Test,1961,Fail !,60.13,3,0 satelite(s) detected
+BT_Test,0,Pass,2.697,1,1 device(s) detected

@@ -75,6 +75,7 @@ void CADBFormDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_THPRX, m_ckThpRx);
 	DDX_Control(pDX, IDC_CHECK_GPS, cbGPS);
 	DDX_Check(pDX, IDC_CHECK_GPS, m_ckGPS);
+	DDX_Control(pDX, IDC_EDIT_MSG_SHOWIT, CntMsgShowIt);
 }
 
 BEGIN_MESSAGE_MAP(CADBFormDlg, CDialog)
@@ -136,6 +137,9 @@ BOOL CADBFormDlg::OnInitDialog()
 	hPCIperfServer = NULL;
 	LoadDefaultConfig();
 
+	//
+	CntMsgShowIt.SetWindowText("ASUS LOG FILE PATH:["+sASUSLogPath+"]");
+
 	//action adb server
 	//DetectDevices();
 	ActionADBServer();
@@ -181,6 +185,8 @@ BOOL CADBFormDlg::OnInitDialog()
 	// DUT ip get automatically,disable 
 	((CEdit *)GetDlgItem(IDC_EDIT_DUTIP))->EnableWindow(iDutIpAuto==0);
 
+	//m_StatAll.SetFocus();
+	CntMsgShowIt.SetFocus();
 	/*
 	CRect rect;
 	m_stTestStatus.GetWindowRect(&rect);
@@ -192,6 +198,8 @@ BOOL CADBFormDlg::OnInitDialog()
 		//DebugLog.SetFilePath("c:\\");
 		//DebugLog.Open("c:\\TTest.txt",CFile::modeCreate|CFile::modeReadWrite,NULL);
 		//DebugLog.SeekToEnd();
+	// 窗口最大化
+	//ShowWindow(SW_SHOWMAXIMIZED);
 	return FALSE;
 	//return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -258,6 +266,120 @@ BOOL CADBFormDlg::ConfigIsReady(void)
 	}
 	return TRUE;
 }
+int   CADBFormDlg::AsusLogPrepare(int BorS)
+{
+	//01.Create B_MMI floder
+    CString BSMMI = "";
+	CString DataF = "";
+	CString LogFileName = "";
+	CString LogFileNameFull = "";
+	//20140828 Wujian modify Start
+	CString StationPCF = "";
+	char  PCName[MAX_PATH] = {0};
+	DWORD PCNamesize=MAX_PATH;
+	::GetComputerName(PCName,&PCNamesize);
+	//20140828 Wujian modify End
+
+	if (0 == BorS) //B_MMI
+	{
+		if (sASUSLogPath.GetLength()==0)
+		{
+			BSMMI.Format("%s\\%s\\%s",PWD,CMD_ADB_MMI_LOG_TAR,CMD_ADB_MMI_LOG_BMMI);
+		}
+		else
+		{
+			BSMMI.Format("\\%s\\%s",sASUSLogPath,CMD_ADB_MMI_LOG_BMMI);
+		}
+		if (!PathIsDirectory(BSMMI))
+		{
+			if(!CreateDirectory(BSMMI,NULL))
+			{
+				//AfxMessageBox("create Date Folder failure!");
+				return E_CREATE_BMMI_FLODER_FAIL;
+			}
+		}
+
+		DataF.Format("%s\\%s",BSMMI,GetCurTimeStr(0));
+		if (!PathIsDirectory(DataF))
+		{
+			if(!CreateDirectory(DataF,NULL))
+			{
+				//AfxMessageBox("create Date Folder failure!");
+				return E_CREATE_BMMI_DATEF_FAIL;
+			}
+		}
+        
+		//20140828 Wujian modify Start
+		StationPCF.Format("%s\\%s",DataF,PCName);
+		if (!PathIsDirectory(StationPCF))
+		{
+			if(!CreateDirectory(StationPCF,NULL))
+			{
+				//AfxMessageBox("create Date Folder failure!");
+				return E_CREATE_BMMI_PCF_FAIL;
+			}
+		}
+		//20140828 Wujian modify End
+
+		LogFileName = m_LiteTestSN+"_"+GetCurTimeStr(2)+".txt";
+		AsusLogFile.SetFilePath(/*DataF*/StationPCF);
+		LogFileNameFull.Format("%s\\%s",/*DataF*/StationPCF,LogFileName);
+		BOOL bfileo = AsusLogFile.Open(LogFileNameFull,CFile::modeCreate|CFile::modeReadWrite);
+		if(!bfileo)
+		{
+			return E_CREATE_BMMI_FILE_FAIL;
+		}
+	}
+	else if (1 == BorS)//02.Create S_MMI floder
+	{
+		if (sASUSLogPath.GetLength()==0)
+		{
+			BSMMI.Format("%s\\%s\\%s",PWD,CMD_ADB_MMI_LOG_TAR,CMD_ADB_MMI_LOG_SMMI);
+		}
+		else
+		{
+			BSMMI.Format("\\%s\\%s",sASUSLogPath,CMD_ADB_MMI_LOG_SMMI);
+		}
+		if (!PathIsDirectory(BSMMI))
+		{
+			if(!CreateDirectory(BSMMI,NULL))
+			{
+				//AfxMessageBox("create Date Folder failure!");
+				return E_CREATE_SMMI_FLODER_FAIL;
+			}
+		}
+
+		DataF.Format("%s\\%s",BSMMI,GetCurTimeStr(0));
+		if (!PathIsDirectory(DataF))
+		{
+			if(!CreateDirectory(DataF,NULL))
+			{
+				//AfxMessageBox("create Date Folder failure!");
+				return E_CREATE_SMMI_DATEF_FAIL;
+			}
+		}
+		//20140828 Wujian modify Start
+		StationPCF.Format("%s\\%s",DataF,PCName);
+		if (!PathIsDirectory(StationPCF))
+		{
+			if(!CreateDirectory(StationPCF,NULL))
+			{
+				//AfxMessageBox("create Date Folder failure!");
+				return E_CREATE_BMMI_PCF_FAIL;
+			}
+		}
+		//20140828 Wujian modify End
+		LogFileName = m_LiteTestSN+"_"+GetCurTimeStr(2)+".txt";
+		AsusLogFile.SetFilePath(/*DataF*/StationPCF);
+		LogFileNameFull.Format("%s\\%s",/*DataF*/StationPCF,LogFileName);
+		BOOL bfileo = AsusLogFile.Open(LogFileNameFull,CFile::modeCreate|CFile::modeNoTruncate|CFile::modeReadWrite);
+		if(!bfileo/*AsusLogFile.m_hFile==NULL*/)
+		{
+			return E_CREATE_SMMI_FILE_FAIL;
+		}
+	}
+	return E_ADB_SUCCESS;
+}
 /************************************************************************/
 /* LOG文件夹生成                                                         */
 /************************************************************************/
@@ -312,6 +434,91 @@ BOOL  CADBFormDlg::LogPrepare(void)
 	}
 	// 20140324 WuJian add End
 	return TRUE;
+}
+int CADBFormDlg::StrSplit(const char *src,char ValArr[][MAX_STATION_VALUE_LEN])
+{
+	int i = 0;
+	int j = 0;
+	while (*src!='\0')
+	{
+		if (i==6) break;
+		if (*src=='\,')
+		{
+			i++;
+			j=0;
+			src++;
+			continue;
+		}
+		ValArr[i][j] = *src;
+		j++;
+		src++;
+	}
+	if (i==5)
+	{
+		return 1;
+	}
+	return 0;
+}
+CString CADBFormDlg::AsusMMIItemList(char *ItemLog)
+{
+	char ItemVal[MAX_STATION_NUM][MAX_STATION_VALUE_LEN] = {0};
+	if (NULL==strstr(ItemLog,"\,"))
+	{
+		if (NULL!=strstr(ItemLog,"Done"))
+		{
+			bMMITestResult = FALSE;
+		}
+		return "";
+	}
+	if (StrSplit(ItemLog,ItemVal)==0)
+	{
+		return "";
+	}
+	//Test Time Total
+	//AsusMMITestTimeTotal = 0.0;
+	CString RetStr = "PAT_TEST,";
+	//deviceSerialNumber
+	RetStr+=(m_LiteTestSN+",");
+	//testItem
+	RetStr.AppendFormat("%s\,",ItemVal[0]);
+	//upperSpecValue
+    //9999.990
+	//GPS_Test 3
+	/*
+	if (NULL!=strstr(ItemVal[0],""))
+	{
+	}
+	*/
+	RetStr.AppendFormat("9999.990\,");
+	//lowerSpecValue
+    //-9999.990
+	RetStr.AppendFormat("-9999.990\,");
+	//testValue
+    //0.000
+    RetStr.AppendFormat("0.000\,");
+	//testStatus
+    RetStr.AppendFormat("%s\,",atoi(ItemVal[1])==0?"P":"F");
+	//errorCode
+	RetStr.AppendFormat("%s\,",ItemVal[1]);
+	//description
+	RetStr.AppendFormat("%s%s\,",ItemVal[5],atoi(ItemVal[1])==0?"PASS":"FAIL");
+    //testTimeSpan
+	RetStr.AppendFormat("%s\r\n",ItemVal[3]);
+	/*
+	WiFi_Test
+	BT_Test
+	GPS_Test
+	*/
+	if (NULL==strstr(ItemVal[0],"WiFi_Test") && NULL==strstr(ItemVal[0],"BT_Test") &&  NULL==strstr(ItemVal[0],"GPS_Test"))
+	{
+		AsusMMITestTimeTotal+=atof(ItemVal[3]);
+	}
+	//bMMITestResult = ItemVal[1]==0?"PASS":"FAIL"
+	if (ItemVal[1]!=0)
+	{
+		bMMITestResult = TRUE;
+	}
+	return RetStr;
 }
 void CADBFormDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
@@ -401,6 +608,68 @@ void CADBFormDlg::OnBnClickedOk()
 	//OnOK();
 }
 
+DWORD CADBFormDlg::PullLogInfoShow(LPVOID lpParam)
+{
+	CADBFormDlg *pThis = (CADBFormDlg *)lpParam;
+
+	return pThis->PullLogInfoShowFunc(0, 0);
+}
+DWORD CADBFormDlg::PullLogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
+{
+	char str[80000+1] = {0};
+	CString ADBPullStr = "";
+	UnDoStrBuff = "";
+
+	while(E_READ_INFO_ERR != RunObj->UpdateOutStr(str))
+	{
+		UpdateLogInfo(-1,str);
+		UnDoStrBuff.AppendFormat("%s",str);
+		ADBPullStr.Format("%s",str);
+
+		if (TestFlag==THREAD_PULL_LOGP && ADBPullStr.Find("does not exist")!=-1)
+		{
+			//SetEvent(hMMILogPull);
+			//AfxMessageBox("BREAK!");
+			dStartRet = E_ADB_PULL_LOG_PCBA;
+			break;
+		}
+		//
+		if (TestFlag==THREAD_PULL_LOGF && ADBPullStr.Find("does not exist")!=-1)
+		{
+			//AfxMessageBox(IPERFStr);
+			//SetEvent(hMMILogPull);
+			//AfxMessageBox("BREAK!");
+			dStartRet = E_ADB_PULL_LOG_FULL;
+			break;
+		}
+		if(ADBPullStr.Find("KB/s")!=-1)
+		{
+			dStartRet = E_ADB_SUCCESS;
+			break;
+		}
+	}
+	//AfxMessageBox(UnDoStrBuff);
+	//dStartRet = AnalyseStr(0,TestFlag,IPERFStr);
+	//if (TestFlag==THREAD_PULL_LOGP) AfxMessageBox("0");
+	if (RunObj!=NULL)
+	{
+		RunObj->DestroyProcess();
+	}
+	//if (TestFlag==THREAD_PULL_LOGP) AfxMessageBox("1");
+	//
+	if (RunObj!=NULL)
+	{
+		RunObj->Close();
+		delete RunObj;
+		RunObj = NULL;
+	}
+	//
+	//AfxMessageBox("3");
+	CloseHandle(hMMILogPullHandle);
+	SetEvent(hMMILogPull);
+	//AfxMessageBox("3");
+	return 0;
+}
 
 DWORD CADBFormDlg::LogInfoShow(LPVOID lpParam)
 {
@@ -459,6 +728,7 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 		//{
 			//strcat(str,"===============================\r\n");
 		//}
+		//strcat(str,"==");
 		UpdateLogInfo(-1,str);
 		UnDoStrBuff.AppendFormat("%s",str);
 		IPERFStr.Format("%s",str);
@@ -508,6 +778,23 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 				SetEvent(hTHPRxTest);
 				break;
 			}
+		}
+		//AfxMessageBox(IPERFStr);
+		if (TestFlag==THREAD_PULL_LOGP && IPERFStr.Find("does not exist")!=-1)
+		{
+			//SetEvent(hMMILogPull);
+			//AfxMessageBox("BREAK!");
+			dStartRet = E_ADB_PULL_LOG_PCBA;
+			break;
+		}
+		//
+		if (TestFlag==THREAD_PULL_LOGF && IPERFStr.Find("does not exist")!=-1)
+		{
+			//AfxMessageBox(IPERFStr);
+			//SetEvent(hMMILogPull);
+			//AfxMessageBox("BREAK!");
+			dStartRet = E_ADB_PULL_LOG_FULL;
+			break;
 		}
 		/*
 		if(TestFlag==THREAD_IPERF_TX)
@@ -559,6 +846,7 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 		UpdateLogInfo(-1,"\r\n");
 	}
 	dStartRet = AnalyseStr(0,TestFlag,IPERFStr);
+	//if (TestFlag==THREAD_PULL_LOGP) AfxMessageBox("0");
 	if(TestFlag == THREAD_ADB_SERVER)
 	{
 		//must be fix code
@@ -573,6 +861,7 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 	{
 		RunObj->DestroyProcess();
 	}
+	//if (TestFlag==THREAD_PULL_LOGP) AfxMessageBox("1");
 	//
 	if (TestFlag==THREAD_IPERF_TX)
 	{
@@ -594,6 +883,14 @@ DWORD CADBFormDlg::LogInfoShowFunc(WPARAM wPamam, LPARAM lParam)
 	SetEvent(hDetectDevice);
 	//RunObj = NULL;
 	//
+	if (TestFlag==THREAD_PULL_LOGP || TestFlag==THREAD_PULL_LOGF)
+	{
+	   //AfxMessageBox("3");
+       CloseHandle(hMMILogPullHandle);
+	   SetEvent(hMMILogPull);
+	   //AfxMessageBox("3");
+	}
+	//if (TestFlag==THREAD_PULL_LOGP) AfxMessageBox("3");
 	return 0;
 }
 
@@ -627,7 +924,98 @@ void CADBFormDlg::RunUIChange(bool RunFlag)
 	cbThpRx.EnableWindow(!RunFlag);
 	cbGPS.EnableWindow(!RunFlag);
 }
+// 20140807 Wujian modify Start
+DWORD CADBFormDlg::PullPCBAMMILog(void)
+{
+	TestFlag = THREAD_PULL_LOGP;
+	char PullLogCMD[MAX_PATH] = {0};
+	//sprintf_s(DetectCMD,"%s%s",PWD,CMD_ADB_SHELL);
+	sprintf_s(PullLogCMD,"%s%s %s%s",PWD,CMD_ADB_PULL_PCBAMMILOG,PWD,CMD_ADB_MMI_LOG_TEMP);
 
+	UpdateLogInfo(-1,"Pull PCBA MMI LOG:\r\n");
+	UpdateLogInfo(-1,PullLogCMD);
+	UpdateLogInfo(-1,"\r\n");
+
+	RunObj = new CPipeRun(PullLogCMD,true);
+	RunObj->PreparePipe();
+	RunObj->RunProgress();
+
+	hMMILogPullHandle = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)PullLogInfoShow,this,NULL,&dGetInfoHandleID);
+
+	return 0;
+}
+
+DWORD CADBFormDlg::PullFULLMMILog(void)
+{
+	TestFlag = THREAD_PULL_LOGF;
+	char PullLogCMD[MAX_PATH] = {0};
+	//sprintf_s(DetectCMD,"%s%s",PWD,CMD_ADB_SHELL);
+	sprintf_s(PullLogCMD,"%s%s %s%s",PWD,CMD_ADB_PULL_FULLMMILOG,PWD,CMD_ADB_MMI_LOG_TEMP);
+
+	UpdateLogInfo(-1,"Pull FULL MMI LOG:\r\n");
+	UpdateLogInfo(-1,PullLogCMD);
+	UpdateLogInfo(-1,"\r\n");
+
+	RunObj = new CPipeRun(PullLogCMD,true);
+	RunObj->PreparePipe();
+	RunObj->RunProgress();
+
+	hMMILogPullHandle = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)PullLogInfoShow,this,NULL,&dGetInfoHandleID);
+
+	return 0;
+}
+int CADBFormDlg::ReadMMILogLine(char *dst,char *value,int &gapsize)
+{
+	//char *tmp = dst;
+	gapsize = 1;
+	char *val = value;
+	while (*dst!='\0' && *dst!='\n')
+	{
+		*val = *dst;
+		val++;
+		dst++;
+		gapsize++;
+	}
+	if (*dst=='\0')
+	{
+		gapsize=0;
+	}
+	//dst++;
+	//value = val;
+	if (strlen(value)>0)
+	{
+		//CString tt;
+		//tt.Format("%s\r\n",value);
+		//UpdateLogInfo(-1,tt);
+		return 1;
+	}
+	return 0;
+}
+CString CADBFormDlg::ReadMMILogFile(int filetype,char **pRetStr)
+{
+	char PullLogCMD[MAX_PATH] = {0};
+	CString RetStr = ""; 
+	CFile fMMILog;
+	sprintf_s(PullLogCMD,"%s%s\\%s",PWD,CMD_ADB_MMI_LOG_TEMP,filetype==0?"PCBA_MMI_TestResult.txt":"Full_MMI_TestResult.txt");
+	BOOL bFileO = fMMILog.Open(PullLogCMD,CFile::modeRead);
+	//sprintf_s(DetectCMD,"%s%s",PWD,CMD_ADB_SHELL);
+	if (!bFileO)
+	{
+		return "";
+	}
+	UINT bufflen = fMMILog.SeekToEnd();
+	//pRetStr = new char[bufflen+1];
+	*pRetStr = (char*)malloc(bufflen+1);
+	memset(*pRetStr,0x0,bufflen+1);
+	fMMILog.SeekToBegin();
+	fMMILog.Read(*pRetStr,bufflen);
+	//RetStr.Format("%s",buffstr);
+	//delete buffstr;
+	//buffstr = NULL;
+	fMMILog.Close();
+	return RetStr;
+}
+// 20140807 Wujian modify End
 DWORD CADBFormDlg::DetectDevices(void)
 {
 	TestFlag = THREAD_DETECT;
@@ -708,6 +1096,8 @@ void CADBFormDlg::UpdateLogInfo(DWORD retcode,CString loginfo)
 			bLogFileNormalLite = FALSE;
 		}
 	}
+	//m_StatAll.SetFocus();
+	CntMsgShowIt.SetFocus();
 }
 
 void CADBFormDlg::OnBnClickedButton1()  //dut detect test
@@ -1451,6 +1841,8 @@ BOOL CADBFormDlg::LoadDefaultConfig(void)
 		iDutIpAuto = m_hConfig.GetKeyIntValue("TestItem","Fetch DUT IP Automatically",1);
 		// retry times
 		iRetryTimes= m_hConfig.GetKeyIntValue("TestItem","Retry Times",3);
+		// ASUS log file path
+		sASUSLogPath=m_hConfig.GetKeyStrValue("ASUS","Log Path","");
 	}
 	else
 	{
@@ -1458,6 +1850,9 @@ BOOL CADBFormDlg::LoadDefaultConfig(void)
 		cDUTIPaddr = "";
 		cPrj       = "";
 		cWoid      = "";
+		// 20140819 Wujian modify Start
+		sASUSLogPath = "";
+		// 20140819 Wujian modify End
 	}
 
 	UpdateData(FALSE);
@@ -1583,7 +1978,7 @@ void CADBFormDlg::OnBnClickedButtonStart()
 	// running status message show
 	UpdateTestStatus(STATUS_RUNNING);
 	// Connect device
-
+	//ReadMMILogLine();
 	UpdateLogInfo(-1,"["+GetCurTimeStr()+"] START\r\n");
 	hMainThreadHandle = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)MainThread,this,NULL,&dMainThreadHandleID);
 	//Sleep(2000);
@@ -1660,6 +2055,8 @@ DWORD CADBFormDlg::MainThreadDo(WPARAM wPamam, LPARAM lParam)
 	ApkOK = FALSE;
 	GPSBugFixCnt = 0;
 	// 20140326 WuJian modify End
+	bMMITestResult = FALSE;
+	sEndTest = "END_TEST,";
 
 LOOP_DETECT:
 	LoopCnt++;
@@ -1688,6 +2085,7 @@ LOOP_DETECT:
 		UpdateLogInfo(5,"\r\n["+GetCurTimeStr()+"] End\r\n");
 		return dStartRet;
 	}
+#ifdef _HQ_ONLY_FOR_ACER_
 	// GPS test
 	if (m_ckGPS)
 	{
@@ -1875,7 +2273,293 @@ LOOP_IPERF_RX:
 			return dStartRet;
 		}
 	}
+#endif
+#ifdef _HQ_ONLY_FOR_ASUS_
+	CString MMILOGStr = "";
+	CString LoginfoAppend = "";
+	hMMILogPull = CreateEvent(NULL, FALSE, FALSE, NULL);
+	UpdateLogInfo(-1,"["+GetCurTimeStr()+"] ");
+	PullPCBAMMILog();
+	//AfxMessageBox("4");
+	if(WAIT_TIMEOUT==WaitForSingleObject(hMMILogPull,iConnectTimeout))
+	{
+		if (RunObj!=NULL)
+		{
+			RunObj->DestroyProcess();
+		}
+	}
+	//AfxMessageBox("5");
+	if (dStartRet!=E_ADB_SUCCESS)
+	{
+		//AfxMessageBox("5");
+		/*if (LoopCnt<iRetryTimes)
+		{
+			Sleep(500);
+		}*/
+		// running status message show
+		UpdateTestStatus(STATUS_FAIL,dStartRet);
+		// enabled button
+		RunUIChange(false);
+		// test end
+		UpdateLogInfo(5,"\r\n["+GetCurTimeStr()+"] End\r\n");
+		return dStartRet;
+	}
+	//MMILOGStr = ReadMMILogFile(0);
+	char *ReadStr = NULL;
+	char svalue[1024] = {0};
+	ReadMMILogFile(0,&ReadStr);
+	if (strlen(ReadStr)<51)
+	{
+		dStartRet = E_PCBA_MMI_LOG_INVALID;
+		UpdateTestStatus(STATUS_FAIL,dStartRet);
+		// enabled button
+		RunUIChange(false);
+		// test end
+		UpdateLogInfo(5,"\r\n["+GetCurTimeStr()+"] End\r\n");
+		if (ReadStr!=NULL)
+		{
+			free(ReadStr);
+			ReadStr = NULL;
+		}
+		return dStartRet;
+	}
+	//UpdateLogInfo(-1,"------------\r\n");
+	int iGapSize = 0;
+	dStartRet = AsusLogPrepare(0);
+	if (E_ADB_SUCCESS!=dStartRet)
+	{
+		UpdateTestStatus(STATUS_FAIL,dStartRet);
+		// enabled button
+		RunUIChange(false);
+		// test end
+		UpdateLogInfo(5,"\r\n["+GetCurTimeStr()+"] End\r\n");
+		if (ReadStr!=NULL)
+		{
+			free(ReadStr);
+			ReadStr = NULL;
+		}
+		return dStartRet;
+	}
+	CString loginfo = "";
+	while (1==ReadMMILogLine(ReadStr,svalue,iGapSize))
+	{
+		ReadStr+=iGapSize;
+		loginfo = AsusMMIItemList(svalue);
+		//AsusLogFile.Write(loginfo,loginfo.GetLength());
+		if (loginfo!="")
+		{
+			LoginfoAppend+=loginfo;
+		}
+		memset(svalue,0,sizeof(svalue));
+	}
+	//head
+	loginfo="PAT_TRACK,";
+	// deviceSerialNumber
+	loginfo+=(m_LiteTestSN+",");
+	// traceStartTime
+	loginfo+=(GetCurTimeStr(3)+",");
+	// testPlanChecksum
+	loginfo+="000000,";//"09,";
+    // dllversion
+	loginfo+="0.93,";
+	// testType
+	loginfo+="0,";
+	// fixtureId
+	loginfo+="1,";
+	// stationName
+	loginfo+="B-MMI,";
+	// projectName
+	loginfo+="ZC450TLT,";
+	// endResult
+	loginfo+=sEndTest;//"END_TEST,";
+	// errorCode
+	loginfo+="0,";
+	// testStatus
+	loginfo+=(bMMITestResult?"F,":"P,");
+	// traceTotalTime
+	// -------------------------
+	//loginfo+="45.6,";
+	loginfo.AppendFormat("%.2f,",AsusMMITestTimeTotal);
+	// -------------------------
+	// factoryID
+	loginfo+="9,";
+	// logVersion
+	loginfo+="1.0\r\n";
+	//
+	loginfo+=LoginfoAppend;
+	AsusLogFile.Write(loginfo,loginfo.GetLength());
+	//UpdateLogInfo(-1,"------------\r\n");
+	//AsusLogFile.SeekToBegin();
+	/*
+	UINT strlen = AsusLogFile.SeekToEnd();
+	//pRetStr = new char[bufflen+1];
+	char *pRedStr = (char*)malloc(strlen+1);
+	memset(pRedStr,0x0,strlen+1);
+	AsusLogFile.SeekToBegin();
+	AsusLogFile.Read(pRedStr,strlen);
+	//AsusLogFile.Read();
+	CString wrStr = "";
+	wrStr.Format("%s%s",loginfo,pRedStr);
+	AsusLogFile.Write(wrStr,wrStr.GetLength());
+	
+	UINT bufflen = AsusLogFile.SeekToEnd();
+	char *buffstr = new char[bufflen+1];
+	AsusLogFile.SeekToBegin();
+	AsusLogFile.Read(buffstr,bufflen);
+	CString wrStr = "";
+	wrStr.Format("%s%s",loginfo,buffstr);
+    AsusLogFile.Write(wrStr,wrStr.GetLength());
+*/
+	loginfo = "#End\r\n";
+	AsusLogFile.SeekToEnd();
+	AsusLogFile.Write(loginfo,loginfo.GetLength());
+	//UpdateLogInfo(-1,"------------\r\n");
+	//ReadMMILogLine(ReadStr,svalue);
+	if(AsusLogFile.m_hFile!=NULL)
+	{
+		AsusLogFile.Close();
+	}
 
+	//FULL MMI TEST LOG PULL
+	hMMILogPull = CreateEvent(NULL, FALSE, FALSE, NULL);
+	UpdateLogInfo(-1,"["+GetCurTimeStr()+"] ");
+	PullFULLMMILog();
+	if(WAIT_TIMEOUT==WaitForSingleObject(hMMILogPull,iConnectTimeout))
+	{
+		if (RunObj!=NULL)
+		{
+			RunObj->DestroyProcess();
+		}
+	}
+	if (dStartRet!=E_ADB_SUCCESS)
+	{
+		/*
+		if (LoopCnt<iRetryTimes)
+		{
+			Sleep(500);
+		}
+		*/
+		// running status message show
+		UpdateTestStatus(STATUS_FAIL,dStartRet);
+		// enabled button
+		RunUIChange(false);
+		// test end
+		UpdateLogInfo(5,"\r\n["+GetCurTimeStr()+"] End\r\n");
+
+		return dStartRet;
+	}
+	//MMILOGStr = ReadMMILogFile(1);
+	ReadMMILogFile(1,&ReadStr);
+	if (strlen(ReadStr)<51)
+	{
+		dStartRet = E_FULL_MMI_LOG_INVALID;
+		UpdateTestStatus(STATUS_FAIL,dStartRet);
+		// enabled button
+		RunUIChange(false);
+		// test end
+		UpdateLogInfo(5,"\r\n["+GetCurTimeStr()+"] End\r\n");
+		if (ReadStr!=NULL)
+		{
+			free(ReadStr);
+			ReadStr = NULL;
+		}
+		return dStartRet;
+	}
+	//UpdateLogInfo(-1,"------------\r\n");
+	iGapSize = 0;
+	dStartRet = AsusLogPrepare(1);
+	if (E_ADB_SUCCESS!=dStartRet)
+	{
+		UpdateTestStatus(STATUS_FAIL,dStartRet);
+		// enabled button
+		RunUIChange(false);
+		// test end
+		UpdateLogInfo(5,"\r\n["+GetCurTimeStr()+"] End\r\n");
+		if (ReadStr!=NULL)
+		{
+			free(ReadStr);
+			ReadStr = NULL;
+		}
+		return dStartRet;
+	}
+	
+	//PAT_TRACK,131274770028,2014/05/15 15:10:33,118174,
+	//1.0.1.2,0,246025,S-AutoAudio,A450CG,END_TEST,0,P,52.0,1,1.0
+	LoginfoAppend = "";
+	while (1==ReadMMILogLine(ReadStr,svalue,iGapSize))
+	{
+		ReadStr+=iGapSize;
+		loginfo = AsusMMIItemList(svalue);
+		//AsusLogFile.Write(loginfo,loginfo.GetLength());
+		//hLogFile.Write(loginfo,loginfo.GetLength());
+		if (loginfo!="")
+		{
+			LoginfoAppend+=loginfo;
+		}
+		memset(svalue,0,sizeof(svalue));
+	}
+	//head
+	loginfo="PAT_TRACK,";
+	// deviceSerialNumber
+	loginfo+=(m_LiteTestSN+",");
+	// traceStartTime
+	loginfo+=(GetCurTimeStr(3)+",");
+	// testPlanChecksum
+	loginfo+="000000,";//"09,";
+	// dllversion
+	loginfo+="0.93,";
+	// testType
+	loginfo+="0,";
+	// fixtureId
+	loginfo+="1,";
+	// stationName
+	loginfo+="S-MMI,";
+	// projectName
+	loginfo+="ZC450TLT,";
+	// endResult
+	loginfo+=sEndTest;//"END_TEST,";
+	// errorCode
+	loginfo+="0,";
+	// testStatus
+	loginfo+=(bMMITestResult?"F,":"P,");
+	// traceTotalTime
+	// -------------------------
+	//loginfo+="45.6,";
+	loginfo.AppendFormat("%.2f,",AsusMMITestTimeTotal);
+	// -------------------------
+	// factoryID
+	loginfo+="9,";
+	// logVersion
+	loginfo+="1.0\r\n";
+	//UpdateLogInfo(-1,"------------\r\n");
+	//AsusLogFile.SeekToBegin();
+	//AsusLogFile.Write(loginfo,loginfo.GetLength());
+	/*
+	bufflen = AsusLogFile.SeekToEnd();
+	memset(buffstr,0,bufflen+1);
+	AsusLogFile.SeekToBegin();
+	AsusLogFile.Read(buffstr,bufflen);
+	wrStr = "";
+	wrStr.Format("%s%s",loginfo,buffstr);
+	AsusLogFile.Write(wrStr,wrStr.GetLength());
+	*/
+	loginfo+=LoginfoAppend;
+	AsusLogFile.Write(loginfo,loginfo.GetLength());
+	loginfo = "#End\r\n";
+	AsusLogFile.SeekToEnd();
+	AsusLogFile.Write(loginfo,loginfo.GetLength());
+	//ReadMMILogLine(ReadStr,svalue,iGapSize);
+
+	if (ReadStr!=NULL)
+	{
+		free(ReadStr);
+		ReadStr = NULL;
+	}
+	if(AsusLogFile.m_hFile!=NULL)
+	{
+		AsusLogFile.Close();
+	}
+#endif
 	// running status message show
 	// all test item is ok
 	UpdateTestStatus(STATUS_PASS);
@@ -1965,6 +2649,16 @@ CString CADBFormDlg::GetCurTimeStr(int iType)
 	{
 		CTime Td = CTime::GetCurrentTime();
 		return Td.Format("%Y-%m-%d %H:%M:%S");
+	}
+	else if (2==iType)
+	{
+		CTime Td = CTime::GetCurrentTime();
+		return Td.Format("%Y_%m_%d_%H_%M_%S");
+	}
+	else if (3==iType)
+	{
+		CTime Td = CTime::GetCurrentTime();
+		return Td.Format("%Y/%m/%d %H:%M:%S");
 	}
 	return "";
 }
@@ -2167,3 +2861,25 @@ int CADBFormDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	return 0;
 }
+
+/*
+DWORD CADBFormDlg::MCodeOct2Hex(const char *srcCodeOct,char *destCodeHex)
+{
+	if (16==strlen(srcCodeOct))
+	{
+		return ERR_LENGTH_INVALID;
+	}
+	for (int i=0;i<16;i++)
+	{
+		if (0==i%2)
+		{
+
+		}
+		else
+		{
+
+		}
+	}
+	return 0;
+}
+*/

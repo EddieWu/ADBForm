@@ -10,7 +10,7 @@
 			>
 			<DebugSettings
 				Command="$(TargetPath)"
-				WorkingDirectory="E:\Project\06.Acer\DroidConn\ADBForm\debug"
+				WorkingDirectory="H:\01.Project\03.ASUS\ADBForm\debug"
 				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"

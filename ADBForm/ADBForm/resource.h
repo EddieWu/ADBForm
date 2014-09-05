@@ -30,6 +30,8 @@
 #define IDC_CHECK_GPS                   1020
 #define IDC_CHECK_THPRX                 1021
 #define IDC_BUTTON7                     1022
+#define IDC_EDIT1                       1023
+#define IDC_EDIT_MSG_SHOWIT             1023
 
 // Next default values for new objects
 // 
@@ -37,7 +39,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        134
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1022
+#define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

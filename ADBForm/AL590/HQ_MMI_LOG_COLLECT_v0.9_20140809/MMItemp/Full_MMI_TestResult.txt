@@ -1,0 +1,10 @@
+[MMI Test Result]
+2014-01-01 01:03:15
+Touch_Test,0,Pass,19.08,,
+LCD_Test,0,Pass,7.92,red/green/blue/white/black,
+BackLight_Test,0,Pass,2.079,,
+Receiver1_Test,0,Pass,6.41,,
+Speaker_Test,0,Pass,4.593,,
+Keypad_Test,0,Pass,10.107,,
+Board MIC_Test,0,Pass,43.486,,
+Board MIC2_Test,0,Pass,84.284,,

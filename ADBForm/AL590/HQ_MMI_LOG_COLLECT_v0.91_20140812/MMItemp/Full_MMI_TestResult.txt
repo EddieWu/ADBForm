@@ -1,0 +1,8 @@
+[MMI Test Result]
+2010-01-01 08:24:01
+Touch_Test,0,Pass,13.077,,
+LCD_Test,0,Pass,5.487,red/green/blue/white/black,
+BackLight_Test,0,Pass,2.907,,
+Receiver1_Test,0,Pass,1.712,,
+Speaker_Test,1926,Fail button is pressed!,0.639,,
+Touch_Test,0,Pass,18.037,,

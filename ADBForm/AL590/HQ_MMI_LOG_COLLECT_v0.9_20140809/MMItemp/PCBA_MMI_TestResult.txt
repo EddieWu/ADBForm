@@ -1,0 +1,8 @@
+[MMI Test Result]
+2014-01-02 01:57:12
+Touch_Test,0,Pass,13.158,,
+Receiver1_Test,0,Pass,5.349,,
+Speaker_Test,0,Pass,4.062,,
+Keypad_Test,0,Pass,6.862,,
+Board MIC_Test,0,Pass,21.769,,
+Board MIC2_Test,0,Pass,20.896,,

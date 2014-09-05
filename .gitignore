@@ -22,6 +22,9 @@ MoreADB/
 *.png
 *.plg
 *.suo
+*.log
+*.csv
+error
 icon/
 ADBForm/debug/
 ADBForm/release/
@@ -33,3 +36,7 @@ conductive_BTWLANGPS/
 DELL_PC/
 ADBForm_bak140228
 20140603_ADBForm/
+
+# Exception files
+!/release/ASUS/
+

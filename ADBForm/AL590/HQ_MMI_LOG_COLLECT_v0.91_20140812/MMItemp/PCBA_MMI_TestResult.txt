@@ -1,0 +1,30 @@
+[MMI Test Result]
+2010-01-01 08:28:21
+Touch_Test,0,Pass,12.424,,
+Receiver1_Test,0,Pass,1.374,,
+Speaker_Test,0,Pass,1.072,,
+Keypad_Test,0,Pass,6.291,,
+Board MIC_Test,0,Pass,8.962,,
+Board MIC2_Test,0,Pass,8.443,,
+Headset_Test,0,Pass,9.348,,
+FM_Test,0,Pass,2.568,104.3/87.9/98.0/108.0MHz,
+MotionSensor_Test,0,Pass,2.512,,left/buttom
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.002,,SN:WJTEST20140807
+BT_Test,0,Pass,1.367,1,1 device(s) detected
+GPS_Test,1961,Fail !,60.005,3,0 satelite(s) detected
+WiFi_Test,0,Pass,1.407,3,3 hotspot(s) detected
+SIMcard_Test,0,Pass,0.011,,IMSI:460006144127671
+SDcard_Test,0,Pass,0.007,,external SD size:3773MB
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.002,,SN:WJTEST20140807
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.002,,SN:WJTEST20140807
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.001,,SN:WJTEST20140807
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.001,,SN:WJTEST20140807
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.0,,SN:WJTEST20140807
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.001,,SN:WJTEST20140807
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.001,,SN:WJTEST20140807
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.001,,SN:WJTEST20140807
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.002,,SN:WJTEST20140807
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.002,,SN:WJTEST20140807
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.001,,SN:WJTEST20140807
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.001,,SN:WJTEST20140807
+Versioninfo_Test,1922,Fail/FT flag not found/BT flag not found,0.001,,SN:WJTEST20140807
