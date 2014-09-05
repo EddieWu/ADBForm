@@ -20,6 +20,8 @@ MoreADB/
 *.opt
 *.rar
 *.png
+*.plg
+*.suo
 icon/
 ADBForm/debug/
 ADBForm/release/
